@@ -1,8 +1,12 @@
 from socket import *
+import sys
 
 serverName = ''
 serverPort = 12000
 bufsize = 2048
+
+def get_path():
+    return sys.argv[1]
 
 def send_filepath(path, clientSocket):
 
@@ -30,9 +34,14 @@ def send_file_content(file, clientSocket):
 
 
 def start_client():
+
+    if len(sys.argv) != 2:
+        print("Wrong number of arguments")
+        return
+
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    filepath = input('Input filename: ')
+    filepath = get_path()
     send_filepath(filepath, clientSocket)
 
     # Open file for sending using byte-array option.
