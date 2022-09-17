@@ -44,4 +44,9 @@ def start_client():
     file.close()
     clientSocket.close()
 
-start_client()
+def main():
+    start_client()
+
+if __name__ == "__main__":
+    main()
+
