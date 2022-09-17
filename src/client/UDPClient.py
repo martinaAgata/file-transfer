@@ -5,8 +5,22 @@ serverName = ''
 serverPort = 12000
 bufsize = 2048
 
+def user_ask_for_help():
+    return (len(sys.argv) == 2) and (sys.argv[1] == '-h')
+
+def give_help():
+    print("Usage: [-h] [-s FILEPATH]")
+    print()
+    print("Optional arguments:")
+    print(" -h    show this help message and exit")
+    print(" -s    source file path")
+
+
+def user_give_filepath():
+    return (len(sys.argv) == 3) and (sys.argv[1] == '-s')
+
 def get_path():
-    return sys.argv[1]
+    return sys.argv[2]
 
 def send_filepath(path, clientSocket):
 
@@ -35,13 +49,18 @@ def send_file_content(file, clientSocket):
 
 def start_client():
 
-    if len(sys.argv) != 2:
+    if user_ask_for_help():
+        give_help()
+        return
+    elif user_give_filepath():
+        filepath = get_path()
+    else:
         print("Wrong number of arguments")
         return
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    filepath = get_path()
+    
     send_filepath(filepath, clientSocket)
 
     # Open file for sending using byte-array option.
