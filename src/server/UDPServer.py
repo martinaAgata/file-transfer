@@ -5,9 +5,6 @@ serverPort = 12000
 bufsize = 2048
 DIRPATH = 'files/'
 
-def get_filename(filepath):
-    return filepath.split('/')[-1]
-
 def process_first_message(encodedFirstMessage):
 
     firstMessage = encodedFirstMessage.decode().split()
@@ -46,7 +43,10 @@ def send_file(file, serverSocket, clientAddress):
     # inform the server that the download is finished
     serverSocket.sendto("FIN".encode(), clientAddress)
 
-def handle_upload_request(serverSocket, filename):
+def handle_upload_request(serverSocket, clientAddress, filename):
+
+    # Send filename received ACK.
+    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
 
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
@@ -57,6 +57,15 @@ def handle_upload_request(serverSocket, filename):
     file.close()
     
 def handle_download_request(serverSocket, clientAddress, filename):
+
+    if not os.path.exists(DIRPATH + filename):
+        # Send filename does not exist NAK.
+        serverSocket.sendto('NAK File does not exist.'.encode(), clientAddress)
+        return
+    
+    # Send filename received ACK.
+    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
+
     file = open(DIRPATH + filename, 'rb')
 
     send_file(file, serverSocket, clientAddress)
@@ -70,22 +79,14 @@ def listen(serverSocket):
         # Receive filepath first.
         firstMessage, clientAddress = serverSocket.recvfrom(bufsize)
 
-        (command, filename) = firstMessage.decode().split()
+        (command, filename) = process_first_message(firstMessage)
         print('Filename: ' + filename)
-        
-        # TODO: Must check that is UPLOAD or DOWNLOAD
+
         if command == 'upload':
-            # Send filename received ACK.
-            serverSocket.sendto('Filename received.'.encode(), clientAddress)
-            handle_upload_request(serverSocket, filename)
+            handle_upload_request(serverSocket, clientAddress, filename)
         else:
-            serverSocket.sendto('Filename received.'.encode(), clientAddress)
             handle_download_request(serverSocket, clientAddress, filename)
             
-
-
-        
-
 def start_server():
     serverSocket = socket(AF_INET, SOCK_DGRAM)
     serverSocket.bind(('', serverPort))

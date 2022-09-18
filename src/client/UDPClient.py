@@ -1,16 +1,31 @@
+from lib2to3.pytree import Base
 from socket import *
 import sys
+import os
 
 serverName = ''
 serverPort = 12000
 bufsize = 2048
 
 COMMAND = None
-FILEPATH = ''
+FILEPATH = '/'
 FILENAME = None
 
-def get_filename(filepath):
-    return filepath.split('/')[-1]
+# Splits message into [ACK | NAK] + data
+def is_ack(message):
+    splited_message = message.decode().split(" ", 1)
+    status = splited_message[0]
+    
+    response = ''
+    if len(splited_message) == 2:
+        response = splited_message[1]
+
+    if status == 'ACK':
+        return (True, response)
+    elif status == 'NAK':
+        return (False, response)
+    else:
+        return (False, "Unknown acknowledge: " + message)
 
 def give_help():
 
@@ -39,20 +54,25 @@ def give_help():
 
 def send_filename(clientSocket):
     clientSocket.sendto((COMMAND + ' ' + FILENAME).encode(), (serverName, serverPort))
-    modifiedMessage, serverAddress = clientSocket.recvfrom(bufsize)
-    print(modifiedMessage.decode())
+    message, _ = clientSocket.recvfrom(bufsize)
+
+    (ack, response) = is_ack(message)
+    
+    if not ack:
+        raise NameError(response)
 
 
 def send_file(file, clientSocket):
     data = file.read(bufsize)
 
     while data:
+        
         clientSocket.sendto(data,(serverName, serverPort))
         message, serverAddress = clientSocket.recvfrom(bufsize)
+        (ack, response) = is_ack(message)
 
-        if message.decode() != 'ACK':
-            print("Ha ocurrido un error")
-            break
+        if not ack:
+            raise BaseException(response)
 
         data = file.read(bufsize)
 
@@ -78,27 +98,52 @@ def recv_file(file, clientSocket):
 
 def handle_upload_request(clientSocket):
 
-    send_filename(clientSocket)
+    if not os.path.exists(FILEPATH + FILENAME):
+        print("Requested source file does not exists")
+        return
+
+    try:
+        send_filename(clientSocket)
+    except NameError as err:
+        print("Server: " + format(err))
+        return
 
     # Open file for sending using byte-array option.
     file = open(FILEPATH + FILENAME, "rb")
 
-    send_file(file, clientSocket)
+    try:
+        send_file(file, clientSocket)
+    except BaseException as err:
+        print("Server: " + format(err))
+    finally:
+        # Close everything
+        file.close()
 
-    # Close everything
-    file.close()
+
 
 def handle_download_request(clientSocket):
 
-    send_filename(clientSocket)
+    if not os.path.exists(FILEPATH):
+        print("Requested destination filepath does not exists")
+        return
+
+    try:
+        send_filename(clientSocket)
+    except NameError as err:
+        print("Server: " + format(err))
+        return
 
     # Open file for sending using byte-array option.
+    # If file does not exist, then creates a new one.
     file = open(FILEPATH + FILENAME, "wb")
 
-    recv_file(file, clientSocket)
-
-    # Close everything
-    file.close()
+    try:
+        recv_file(file, clientSocket)
+    except BaseException as err:
+        print("Server: " + format(err))
+    finally:
+        # Close everything
+        file.close()
 
 def start_client():
 
