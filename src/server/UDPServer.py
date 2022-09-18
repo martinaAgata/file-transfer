@@ -28,21 +28,22 @@ def recv_file(file, serverSocket):
 def listen(serverSocket):
     print('The server is ready to receive')
 
-    # Receive filepath first.
-    filepath, clientAddress = serverSocket.recvfrom(bufsize)
-    filepath = filepath.decode()
-    print('Filepath: ' + filepath)
+    while True:
+        # Receive filepath first.
+        filepath, clientAddress = serverSocket.recvfrom(bufsize)
+        filepath = filepath.decode()
+        print('Filepath: ' + filepath)
 
-    # Send filename received ACK.
-    serverSocket.sendto('Filename received.'.encode(), clientAddress)
+        # Send filename received ACK.
+        serverSocket.sendto('Filename received.'.encode(), clientAddress)
 
-    # Create new file where to put the content of the file to receive.
-    # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
-    file = open(DIRPATH + get_filename(filepath), 'wb')
+        # Create new file where to put the content of the file to receive.
+        # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
+        file = open(DIRPATH + get_filename(filepath), 'wb')
 
-    recv_file(file, serverSocket)
+        recv_file(file, serverSocket)
 
-    file.close()
+        file.close()
 
 def start_server():
     serverSocket = socket(AF_INET, SOCK_DGRAM)
