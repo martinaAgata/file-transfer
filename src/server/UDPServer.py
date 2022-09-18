@@ -3,6 +3,7 @@ import os
 
 serverPort = 12000
 bufsize = 2048
+DIRPATH = 'files/'
 
 def get_filename(filepath):
     return filepath.split('/')[-1]
@@ -41,7 +42,7 @@ def listen(serverSocket):
 
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
-    file = open('files/' + get_filename(filepath), 'wb')
+    file = open(DIRPATH + get_filename(filepath), 'wb')
 
     recv_file(file, serverSocket)
 

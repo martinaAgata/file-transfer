@@ -23,8 +23,6 @@ def get_path():
     return sys.argv[2]
 
 def send_filepath(path, clientSocket):
-
-    # Send filename.
     clientSocket.sendto(path.encode(), (serverName, serverPort))
     modifiedMessage, serverAddress = clientSocket.recvfrom(bufsize)
     print(modifiedMessage.decode())
