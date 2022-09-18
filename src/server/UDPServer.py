@@ -30,6 +30,22 @@ def recv_file(file, serverSocket):
 
     print('Received file content from the Client.')
 
+def send_file(file, serverSocket, clientAddress):
+    data = file.read(bufsize)
+
+    while data:
+        serverSocket.sendto(data, clientAddress)
+        message, serverAddress = serverSocket.recvfrom(bufsize)
+
+        if message.decode() != 'ACK':
+            print("Ha ocurrido un error")
+            break
+
+        data = file.read(bufsize)
+
+    # inform the server that the download is finished
+    serverSocket.sendto("FIN".encode(), clientAddress)
+
 def handle_upload_request(serverSocket, filename):
 
     # Create new file where to put the content of the file to receive.
@@ -40,8 +56,12 @@ def handle_upload_request(serverSocket, filename):
 
     file.close()
     
-def handle_download_request(serverSocket, clientAddress):
-    serverSocket.sendto('THIS FEATURE IS UNDER DEVELOPMENT. COME BACK SOON XD'.encode(), clientAddress)
+def handle_download_request(serverSocket, clientAddress, filename):
+    file = open(DIRPATH + filename, 'rb')
+
+    send_file(file, serverSocket, clientAddress)
+
+    file.close()
 
 def listen(serverSocket):
     print('The server is ready to receive')
@@ -59,7 +79,9 @@ def listen(serverSocket):
             serverSocket.sendto('Filename received.'.encode(), clientAddress)
             handle_upload_request(serverSocket, filename)
         else:
-            handle_download_request(serverSocket, clientAddress)
+            serverSocket.sendto('Filename received.'.encode(), clientAddress)
+            handle_download_request(serverSocket, clientAddress, filename)
+            
 
 
         
