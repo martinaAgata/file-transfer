@@ -1,4 +1,5 @@
 from socket import *
+import os
 
 serverPort = 12000
 bufsize = 2048
@@ -33,6 +34,10 @@ def listen(serverSocket):
 
     # Send filename received ACK.
     serverSocket.sendto('Filename received.'.encode(), clientAddress)
+
+    # Create /files directory if not exist
+    if not os.path.isdir('files'):
+        os.mkdir('files')
 
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
