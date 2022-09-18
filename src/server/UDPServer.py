@@ -8,6 +8,12 @@ DIRPATH = 'files/'
 def get_filename(filepath):
     return filepath.split('/')[-1]
 
+def process_first_message(encodedFirstMessage):
+
+    firstMessage = encodedFirstMessage.decode().split()
+
+    return (firstMessage[0], firstMessage[1])
+
 def recv_file(file, serverSocket):
     # Receive file content.
     maybeFileContent, clientAddress = serverSocket.recvfrom(bufsize)
@@ -24,26 +30,39 @@ def recv_file(file, serverSocket):
 
     print('Received file content from the Client.')
 
+def handle_upload_request(serverSocket, filename):
+
+    # Create new file where to put the content of the file to receive.
+    # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
+    file = open(DIRPATH + filename, 'wb')
+
+    recv_file(file, serverSocket)
+
+    file.close()
+    
+def handle_download_request(serverSocket, clientAddress):
+    serverSocket.sendto('THIS FEATURE IS UNDER DEVELOPMENT. COME BACK SOON XD'.encode(), clientAddress)
 
 def listen(serverSocket):
     print('The server is ready to receive')
 
     while True:
         # Receive filepath first.
-        filepath, clientAddress = serverSocket.recvfrom(bufsize)
-        filepath = filepath.decode()
-        print('Filepath: ' + filepath)
+        firstMessage, clientAddress = serverSocket.recvfrom(bufsize)
 
-        # Send filename received ACK.
-        serverSocket.sendto('Filename received.'.encode(), clientAddress)
+        (command, filename) = firstMessage.decode().split()
+        print('Filename: ' + filename)
+        
+        # TODO: Must check that is UPLOAD or DOWNLOAD
+        if command == 'upload':
+            # Send filename received ACK.
+            serverSocket.sendto('Filename received.'.encode(), clientAddress)
+            handle_upload_request(serverSocket, filename)
+        else:
+            handle_download_request(serverSocket, clientAddress)
 
-        # Create new file where to put the content of the file to receive.
-        # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
-        file = open(DIRPATH + get_filename(filepath), 'wb')
 
-        recv_file(file, serverSocket)
-
-        file.close()
+        
 
 def start_server():
     serverSocket = socket(AF_INET, SOCK_DGRAM)
