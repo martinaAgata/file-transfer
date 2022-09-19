@@ -15,7 +15,8 @@ def recv_file(file, serverSocket):
     # Receive file content.
     maybeFileContent, clientAddress = serverSocket.recvfrom(bufsize)
 
-    while maybeFileContent != "FIN".encode():
+    #TODO: Think about a better way to end the transfer
+    while maybeFileContent != "END".encode():
 
         # Write file content to new file
         file.write(maybeFileContent)
@@ -35,13 +36,13 @@ def send_file(file, serverSocket, clientAddress):
         message, serverAddress = serverSocket.recvfrom(bufsize)
 
         if message.decode() != 'ACK':
-            print("Ha ocurrido un error")
+            print("An error has occurred")
             break
 
         data = file.read(bufsize)
 
     # inform the server that the download is finished
-    serverSocket.sendto("FIN".encode(), clientAddress)
+    serverSocket.sendto("END".encode(), clientAddress)
 
 def handle_upload_request(serverSocket, clientAddress, filename):
 
@@ -82,6 +83,7 @@ def listen(serverSocket):
         (command, filename) = process_first_message(firstMessage)
         print('Filename: ' + filename)
 
+        #TODO: Handle case where command is not upload and download 
         if command == 'upload':
             handle_upload_request(serverSocket, clientAddress, filename)
         else:

@@ -26,7 +26,7 @@ def is_ack(message):
     elif status == 'NAK':
         return (False, response)
     else:
-        return (False, "Unknown acknowledge: " + message)
+        return (False, "Unknown acknowledge: " + message.decode())
 
 def give_help():
 
@@ -73,18 +73,19 @@ def send_file(file, clientSocket):
         (ack, response) = is_ack(message)
 
         if not ack:
+            #TODO: Think a better error
             raise BaseException(response)
 
         data = file.read(bufsize)
 
-    # inform the server that the download is finished
-    clientSocket.sendto("FIN".encode(),(serverName, serverPort))
+    # Inform the server that the download is finished
+    clientSocket.sendto("END".encode(),(serverName, serverPort))
 
 def recv_file(file, clientSocket):
     # Receive file content.
     maybeFileContent, serverAddress = clientSocket.recvfrom(bufsize)
 
-    while maybeFileContent != "FIN".encode():
+    while maybeFileContent != "END".encode():
 
         # Write file content to new file
         file.write(maybeFileContent)
