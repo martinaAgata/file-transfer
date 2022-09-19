@@ -8,7 +8,8 @@ serverPort = 12000
 bufsize = 2048
 
 COMMAND = None
-FILEPATH = '../../downloads/'
+DOWNLOAD_FILEPATH = '../../downloads/'
+UPLOAD_FILEPATH = '../../resources/'
 FILENAME = None
 
 # Splits message into [ACK | NAK] + data
@@ -98,7 +99,7 @@ def recv_file(file, clientSocket):
 
 def handle_upload_request(clientSocket):
 
-    if not os.path.exists(FILEPATH + FILENAME):
+    if not os.path.exists(UPLOAD_FILEPATH + FILENAME):
         print("Requested source file does not exists")
         return
 
@@ -109,7 +110,7 @@ def handle_upload_request(clientSocket):
         return
 
     # Open file for sending using byte-array option.
-    file = open(FILEPATH + FILENAME, "rb")
+    file = open(UPLOAD_FILEPATH + FILENAME, "rb")
 
     try:
         send_file(file, clientSocket)
@@ -123,7 +124,7 @@ def handle_upload_request(clientSocket):
 
 def handle_download_request(clientSocket):
 
-    if not os.path.exists(FILEPATH):
+    if not os.path.exists(DOWNLOAD_FILEPATH):
         print("Requested destination filepath does not exists")
         return
 
@@ -135,7 +136,7 @@ def handle_download_request(clientSocket):
 
     # Open file for sending using byte-array option.
     # If file does not exist, then creates a new one.
-    file = open(FILEPATH + FILENAME, "wb")
+    file = open(DOWNLOAD_FILEPATH + FILENAME, "wb")
 
     try:
         recv_file(file, clientSocket)
@@ -148,11 +149,13 @@ def handle_download_request(clientSocket):
 def start_client():
 
     global COMMAND
-    global FILEPATH
+    global UPLOAD_FILEPATH
+    global DOWNLOAD_FILEPATH
     global FILENAME
 
     sys.argv.pop(0)
     
+    # TODO: hacer que no crashee xd
     while sys.argv:
         expected_flag = sys.argv.pop(0)
 
@@ -162,7 +165,10 @@ def start_client():
         elif expected_flag in ['upload', 'download']:
             COMMAND = expected_flag
         elif expected_flag == '-s':
-            FILEPATH = sys.argv.pop(0) + '/'
+            if COMMAND == 'upload':
+                UPLOAD_FILEPATH = sys.argv.pop(0) + '/'
+            else:
+                DOWNLOAD_FILEPATH = sys.argv.pop(0) + '/'
         elif expected_flag == '-n':
             FILENAME = sys.argv.pop(0)
         else:
