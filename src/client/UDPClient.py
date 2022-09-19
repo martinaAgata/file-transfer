@@ -8,7 +8,7 @@ serverPort = 12000
 bufsize = 2048
 
 COMMAND = None
-FILEPATH = '/'
+FILEPATH = '../../downloads/'
 FILENAME = None
 
 # Splits message into [ACK | NAK] + data
@@ -30,21 +30,21 @@ def is_ack(message):
 def give_help():
 
     if COMMAND == 'upload':
-        print("Usage: upload [-h] [-s FILEPATH] [-s FILENAME]")
+        print("Usage: upload [-h] [-s FILEPATH] [-n FILENAME]")
         print()
         print("Optional arguments:")
         print(" -h    show this help message and exit")
         print(" -s    source file path")
         print(" -n    file name")
     elif COMMAND == 'download':
-        print("Usage: download [-h] [-s FILEPATH] [-s FILENAME]")
+        print("Usage: download [-h] [-s FILEPATH] [-n FILENAME]")
         print()
         print("Optional arguments:")
         print(" -h    show this help message and exit")
         print(" -s    destination file path")
         print(" -n    file name")
     else:
-        print("Usage: [upload | download] [-h] [-s FILEPATH] [-s FILENAME]")
+        print("Usage: [upload | download] [-h] [-s FILEPATH] [-n FILENAME]")
         print()
         print("Optional arguments:")
         print(" -h    show this help message and exit")
