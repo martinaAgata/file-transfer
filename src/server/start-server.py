@@ -1,9 +1,10 @@
 import argparse
-from socket import *
+from socket import socket, AF_INET, SOCK_DGRAM
 import os
 
+DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
-bufsize = 2048
+BUFSIZE = 2048
 DEFAULT_DIRPATH = 'files/'
 
 
@@ -16,7 +17,7 @@ def process_first_message(encodedFirstMessage):
 
 def recv_file(file, serverSocket):
     # Receive file content.
-    maybeFileContent, clientAddress = serverSocket.recvfrom(bufsize)
+    maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
 
     # TODO: Think about a better way to end the transfer
     while maybeFileContent != "END".encode():
@@ -26,23 +27,23 @@ def recv_file(file, serverSocket):
 
         # Send file content received ACK.
         serverSocket.sendto('ACK'.encode(), clientAddress)
-        maybeFileContent, clientAddress = serverSocket.recvfrom(bufsize)
+        maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
 
     print('Received file content from the Client.')
 
 
 def send_file(file, serverSocket, clientAddress):
-    data = file.read(bufsize)
+    data = file.read(BUFSIZE)
 
     while data:
         serverSocket.sendto(data, clientAddress)
-        message, serverAddress = serverSocket.recvfrom(bufsize)
+        message, serverAddress = serverSocket.recvfrom(BUFSIZE)
 
         if message.decode() != 'ACK':
             print("An error has occurred")
             break
 
-        data = file.read(bufsize)
+        data = file.read(BUFSIZE)
 
     # inform the server that the download is finished
     serverSocket.sendto("END".encode(), clientAddress)
@@ -54,7 +55,8 @@ def handle_upload_request(serverSocket, clientAddress, filename):
     serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
 
     # Create new file where to put the content of the file to receive.
-    # Opens a file for writing. Creates a new file if it does not exist or truncates the file if it exists.
+    # Opens a file for writing. Creates a new file if it does not exist
+    # or truncates the file if it exists.
     file = open(dirpath + filename, 'wb')
 
     recv_file(file, serverSocket)
@@ -84,7 +86,7 @@ def listen(serverSocket):
 
     while True:
         # Receive filepath first.
-        firstMessage, clientAddress = serverSocket.recvfrom(bufsize)
+        firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
 
         (command, filename) = process_first_message(firstMessage)
         print('Filename: ' + filename)
@@ -98,7 +100,8 @@ def listen(serverSocket):
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog='start-server', description='Start the server with a specific configuration')
+        prog='start-server',
+        description='Start the server with a specific configuration')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',
@@ -109,7 +112,7 @@ def parse_arguments():
     argParser.add_argument('-H', '--host',
                            type=str,
                            help='service IP address',
-                           default='127.0.0.1',
+                           default=DEFAULT_SERVER_IP,
                            metavar='ADDR')
     argParser.add_argument('-p', '--port',
                            type=int,
