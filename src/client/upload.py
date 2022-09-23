@@ -1,4 +1,5 @@
 import argparse
+import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
 
@@ -6,6 +7,7 @@ DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
 DEFAULT_UPLOAD_FILEPATH = '../../resources/'
+DEFAULT_LOGGING_LEVEL = logging.INFO
 
 
 # TODO: delete duplicated coed upload.py-download.py (is_ack, send_filename)
@@ -31,43 +33,55 @@ def is_ack(message):
 def send_filename(clientSocket):
     clientSocket.sendto(('upload' + ' ' + filename).encode(),
                         (serverIP, port))
+    logging.debug("Command and filename sent to server")
     message, _ = clientSocket.recvfrom(BUFSIZE)
 
     (ack, response) = is_ack(message)
 
     if not ack:
         raise NameError(response)
+    logging.debug("ACK for first message received from server")
 
 
 def send_file(file, clientSocket):
     data = file.read(BUFSIZE)
 
     while data:
+        logging.debug("Read data from file")
 
         clientSocket.sendto(data, (serverIP, port))
+        logging.debug("Sent data to server")
         message, serverAddress = clientSocket.recvfrom(BUFSIZE)
+        logging.debug(f"Received message {message} from server")
         (ack, response) = is_ack(message)
 
         if not ack:
             # TODO: Think a better error
             raise BaseException(response)
 
+        logging.debug("ACK received from server")
         data = file.read(BUFSIZE)
 
     # Inform the server that the download is finished
     clientSocket.sendto("END".encode(), (serverIP, port))
+    logging.debug("Sent END to server")
+
+    logging.info("File sent to server")
 
 
 def handle_upload_request(clientSocket):
+    logging.info("Handling upload")
 
     if not os.path.exists(filepath + filename):
-        print("Requested source file does not exists")
+        logging.error(
+            f"Requested source file {filepath}/{filename} does not exists")
         return
 
     try:
         send_filename(clientSocket)
     except NameError as err:
-        print("Server: " + format(err))
+        logging.error(
+            f"Message received from server is not an ACK: {format(err)}")
         return
 
     # Open file for sending using byte-array option.
@@ -76,7 +90,8 @@ def handle_upload_request(clientSocket):
     try:
         send_file(file, clientSocket)
     except BaseException as err:
-        print("Server: " + format(err))
+        logging.error(
+            f"An error occurred when sending file to server: {format(err)}")
     finally:
         # Close everything
         file.close()
@@ -88,9 +103,14 @@ def parse_arguments():
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',
-                       help='increase output verbosity', action='store_true')
+                       help='increase output verbosity',
+                       action="store_const",
+                       dest="loglevel", const=logging.DEBUG,
+                       default=DEFAULT_LOGGING_LEVEL)
     group.add_argument('-q', '--quiet',
-                       help='decrease output verbosity', action='store_true')
+                       help='decrease output verbosity', action="store_const",
+                       dest="loglevel", const=logging.CRITICAL,
+                       default=DEFAULT_LOGGING_LEVEL)
 
     argParser.add_argument('-H', '--host',
                            type=str,
@@ -118,20 +138,23 @@ def parse_arguments():
 def start_client():
     args = parse_arguments()
 
-    print("verbose", args.verbose)
-    print("quiet", args.quiet)
+    logging.basicConfig(level=args.loglevel)
+    logging.info("Initializing upload client")
+    logging.debug("Arguments parsed")
+
     global serverIP
     serverIP = args.host
-    print("host", serverIP)
     global port
     port = args.port
-    print("port", port)
     global filepath
     filepath = args.src
-    print("filepath", filepath)
     global filename
     filename = args.name
-    print("filename", filename)
+
+    logging.debug(f"Server IP address: {serverIP}")
+    logging.debug(f"Server port: {port}")
+    logging.debug(f"Filepath: {filepath}")
+    logging.debug(f"Filename: {filename}")
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
