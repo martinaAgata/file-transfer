@@ -161,6 +161,7 @@ def start_client():
     handle_upload_request(clientSocket)
 
     clientSocket.close()
+    logging.debug(f"Socket {clientSocket} closed")
 
 
 def main():
