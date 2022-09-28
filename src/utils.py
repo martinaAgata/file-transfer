@@ -29,10 +29,15 @@ def recv_file(file, serverSocket, queue):
 
         message = queue.get()
 
-    if message.type != FIN:
-        logging.info(f"Received a {message.type} packet")
-
-    logging.info(f"Received file from client {message.clientAddress}")
+    if message.type == FIN:
+        logging.info(f"Received file from client {message.clientAddress}")
+        serverSocket.sendto('FIN_ACK'.encode(), message.clientAddress)
+    else:
+        logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
+        # TODO: Check if sending FIN is the best choice.
+        serverSocket.sendto('FIN'.encode(), message.clientAddress)
+        
+    
 
 
 def send_file(file, serverSocket, clientAddress, queue):
