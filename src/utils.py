@@ -2,7 +2,7 @@ import argparse
 import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
-from .definitions import BUFSIZE,UPLOAD,DOWNLOAD,DATA,FIN
+from .definitions import BUFSIZE,UPLOAD,DOWNLOAD,DATA,FIN,FIN_ACK,ACK,NAK
 
 def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
@@ -19,7 +19,7 @@ def recv_file(file, serverSocket, queue):
         logging.debug(
             f"Received file content from client {message.clientAddress}")
 
-        # Write file content to new file
+        # Write file content to new file (it should already be encoded)
         file.write(message.data)
         logging.debug("File content written")
 
@@ -31,11 +31,11 @@ def recv_file(file, serverSocket, queue):
 
     if message.type == FIN:
         logging.info(f"Received file from client {message.clientAddress}")
-        serverSocket.sendto('FIN_ACK'.encode(), message.clientAddress)
+        serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
     else:
         logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
-        # TODO: Check if sending FIN is the best choice.
-        serverSocket.sendto('FIN'.encode(), message.clientAddress)
+        # TODO: Check if sending FIN is the best choice to close the client.
+        serverSocket.sendto(FIN.encode(), message.clientAddress)
         
     
 
@@ -48,11 +48,12 @@ def send_file(file, serverSocket, clientAddress, queue):
         serverSocket.sendto(data, clientAddress)
         logging.debug(f"Sent data to client {clientAddress}")
 
-        message, serverAddress = serverSocket.recvfrom(BUFSIZE)
+        message = queue.get()
+        
         logging.debug(
-            f"Received message {message} from client {clientAddress}")
+            f"Received message {message.type} from client {clientAddress}")
 
-        if message.decode() != 'ACK':
+        if message.type != ACK:
             logging.error(f"ACK not received from client {clientAddress}")
             break  # TODO: wouldn't it be a return instead of a break?
 
