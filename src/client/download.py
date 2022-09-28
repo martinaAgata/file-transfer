@@ -45,7 +45,7 @@ def recv_file(file, clientSocket):
     # Receive file content.
     maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    while maybeFileContent != "END".encode():
+    while maybeFileContent != "FIN".encode():
         logging.debug("Received file content from server")
 
         # Write file content to new file
@@ -58,7 +58,7 @@ def recv_file(file, clientSocket):
         maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
     print('Received file content from the Server.')
-    logging.debug("Received END message from server")
+    logging.debug("Received FIN message from server")
 
     logging.info("File downloaded from server")
 

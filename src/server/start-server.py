@@ -1,15 +1,7 @@
 import argparse
-import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
-
-DEFAULT_SERVER_IP = '127.0.0.1'
-DEFAULT_SERVER_PORT = 12000
-BUFSIZE = 2048
-DEFAULT_DIRPATH = 'files/'
-DEFAULT_LOGGING_LEVEL = logging.INFO
-UPLOAD = "upload"
-DOWNLOAD = "download"
+from ..definitions import *
 
 
 def process_first_message(encodedFirstMessage):
@@ -60,8 +52,8 @@ def send_file(file, serverSocket, clientAddress):
         data = file.read(BUFSIZE)
 
     # inform the client that the download is finished
-    serverSocket.sendto("END".encode(), clientAddress)
-    logging.debug(f"Sent END to client {clientAddress}")
+    serverSocket.sendto("FIN".encode(), clientAddress)
+    logging.debug(f"Sent FIN to client {clientAddress}")
 
     logging.info(f"Sent file to client {clientAddress}")
 

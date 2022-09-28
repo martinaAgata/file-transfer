@@ -63,8 +63,8 @@ def send_file(file, clientSocket):
         data = file.read(BUFSIZE)
 
     # Inform the server that the download is finished
-    clientSocket.sendto("END".encode(), (serverIP, port))
-    logging.debug("Sent END to server")
+    clientSocket.sendto("FIN".encode(), (serverIP, port))
+    logging.debug("Sent FIN to server")
 
     logging.info("File sent to server")
 
