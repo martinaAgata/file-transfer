@@ -2,8 +2,9 @@ import threading as thr
 import queue
 
 import sys
-sys.path.append('..')
-from utils import handle_action
+sys.path.append('..') # TODO: DANGEROUS!
+
+from ..utils import handle_action
 
 class ClientHandler:
     """

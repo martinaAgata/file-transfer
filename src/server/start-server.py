@@ -8,7 +8,7 @@ from ..utils import process_first_message
 from ..definitions import BUFSIZE,UPLOAD,DOWNLOAD,NAK,FIN,FIN_ACK,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_DIRPATH
 
 import sys
-sys.path.append('..')
+sys.path.append('..') # TODO: DANGEROUS!
 
 
 def listen(serverSocket):
