@@ -1,12 +1,13 @@
 import argparse
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
-from client_handler import ClientHandler
-from message import Message
+from .client_handler import ClientHandler
+from .message import Message
+from ..utils import process_first_message
 
 import sys
 sys.path.append('..')
-from definitions import *
+from ..definitions import *
 
 
 # def process_first_message(encodedFirstMessage):
@@ -122,7 +123,7 @@ def listen(serverSocket):
         logging.info(f"Received {command} command for file {filename}")
         message = Message(firstMessage, clientAddress)
 
-        if clientsDict.contains(clientAddress):
+        if clientAddress in clientsDict:
             # OLD CLIENT
             clientHandler = clientsDict[clientAddress]
         else:
@@ -135,7 +136,7 @@ def listen(serverSocket):
             else:
                 # TODO: log me
                 # TODO: send reasons for NAK 
-                serverSocket.sendto("NAK".encode(), clientAddress)
+                serverSocket.sendto(NAK.encode(), clientAddress)
                 continue
 
         clientHandler.send(message)

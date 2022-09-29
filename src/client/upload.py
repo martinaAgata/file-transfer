@@ -1,13 +1,8 @@
 import argparse
 import logging
-from socket import socket, AF_INET, SOCK_DGRAM
 import os
-
-DEFAULT_SERVER_IP = '127.0.0.1'
-DEFAULT_SERVER_PORT = 12000
-BUFSIZE = 2048
-DEFAULT_UPLOAD_FILEPATH = '../../resources/'
-DEFAULT_LOGGING_LEVEL = logging.INFO
+from socket import socket, AF_INET, SOCK_DGRAM
+from ..definitions import ACK,NAK,BUFSIZE,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_UPLOAD_FILEPATH
 
 
 # TODO: delete duplicated coed upload.py-download.py (is_ack, send_filename)
@@ -22,9 +17,9 @@ def is_ack(message):
     if len(splited_message) == 2:
         response = splited_message[1]
 
-    if status == 'ACK':
+    if status == ACK:
         return (True, response)
-    elif status == 'NAK':
+    elif status == NAK:
         return (False, response)
     else:
         return (False, "Unknown acknowledge: " + message.decode())
