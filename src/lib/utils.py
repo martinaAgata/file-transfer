@@ -64,7 +64,11 @@ def send_file(file, serverSocket, clientAddress, queue):
     logging.info(f"Sent file to client {clientAddress}")
 
 
-def handle_upload_request(clientAddress, serverSocket, queue, dirpath, filename):
+def handle_upload_request(clientAddress,
+                          serverSocket,
+                          queue,
+                          dirpath,
+                          filename):
     logging.info("Handling upload request")
 
     # Send filename received ACK.
@@ -80,6 +84,7 @@ def handle_upload_request(clientAddress, serverSocket, queue, dirpath, filename)
     recv_file(file, serverSocket, queue)
 
     file.close()
+
 
 def handle_download_request(clientAddress, serverSocket, queue, dirpath, filename):
     logging.info("Handling download request")
@@ -115,3 +120,35 @@ def handle_action(address, socket, queue, dirpath):
     else:
         logging.error(
             f"Received an invalid command from client {address}")
+
+
+def is_ack(message):
+    """
+    Splits message into [ACK | NAK] + data
+    """
+    splited_message = message.decode().split(" ", 1)
+    status = splited_message[0]
+
+    response = ''
+    if len(splited_message) == 2:
+        response = splited_message[1]
+
+    if status == ACK:
+        return (True, response)
+    elif status == NAK:
+        return (False, response)
+    else:
+        return (False, "Unknown acknowledge: " + message.decode())
+
+
+def send_filename(clientSocket, action, serverIP, port, filename):
+    clientSocket.sendto((action + ' ' + filename).encode(),
+                        (serverIP, port))
+    logging.debug("Command and filename sent to server")
+    message, _ = clientSocket.recvfrom(BUFSIZE)
+
+    (ack, response) = is_ack(message)
+
+    if not ack:
+        raise NameError(response)
+    logging.debug(f"{ACK} for first message received from server")

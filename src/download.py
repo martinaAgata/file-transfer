@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import argparse
 import logging
 import os
@@ -125,6 +126,11 @@ def start_client():
     logging.debug(f"Socket {clientSocket} closed")
 
 
+=======
+from lib.client.start_download import start_client
+
+
+>>>>>>> 9130b4e (More linter fixes)
 def main():
     start_client()
 
