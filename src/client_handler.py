@@ -1,10 +1,8 @@
 import threading as thr
 import queue
+from definitions import TIMEOUT
+from utils import handle_action
 
-import sys
-sys.path.append('..') # TODO: DANGEROUS!
-
-from ..utils import handle_action
 
 class ClientHandler:
     """
@@ -17,8 +15,10 @@ class ClientHandler:
         self.queue = queue.Queue()
         self.address = address
         self.socket = socket
-        self.thread = thr.Thread(target=handle_action, args=(address, socket, self.queue, dirpath))
-    
+        self.thread = thr.Thread(
+            target=handle_action,
+            args=(address, socket, self.queue, dirpath))
+
     def start_thread(self):
         """
         Spawns own thread
@@ -29,10 +29,10 @@ class ClientHandler:
         """
         Inserts message at own queue
         """
-        self.queue.put(message) # TODO: Full Exception.
+        self.queue.put(message)  # TODO: Full Exception.
 
     def join(self):
         """
         Waits for the thread to end
         """
-        self.thread.join()
+        self.thread.join(TIMEOUT)

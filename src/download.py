@@ -2,56 +2,55 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from ..definitions import *
-from ..utils import send_filename,is_ack
+from definitions import (BUFSIZE, FIN, ACK, DOWNLOAD, DEFAULT_LOGGING_LEVEL,
+                         DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT,
+                         DEFAULT_DOWNLOAD_FILEPATH)
+from utils import send_filename
 
 
-def send_file(file, clientSocket):
-    data = file.read(BUFSIZE)
+def recv_file(file, clientSocket):
+    # Receive file content.
+    maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    while data:
-        logging.debug("Read data from file")
+    while maybeFileContent != FIN.encode():
+        logging.debug("Received file content from server")
 
-        clientSocket.sendto(data, (serverIP, port))
-        logging.debug("Sent data to server")
-        message, _ = clientSocket.recvfrom(BUFSIZE) # second element is serverAddress
-        logging.debug(f"Received message {message} from server")
-        (ack, response) = is_ack(message)
+        # Write file content to new file
+        file.write(maybeFileContent)
+        logging.debug("File content written to file")
 
-        if not ack:
-            # TODO: Think a better error
-            raise BaseException(response)
+        # Send file content received ACK.
+        clientSocket.sendto(ACK.encode(), serverAddress)
+        logging.debug(f"Sent {ACK} to server")
+        maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-        logging.debug(f"{ACK} received from server")
-        data = file.read(BUFSIZE)
+    print("Received file content from the Server.")
+    logging.debug(f"Received {FIN} message from server")
 
-    # Inform the server that the download is finished
-    clientSocket.sendto(FIN.encode(), (serverIP, port))
-    logging.debug(f"Sent {FIN} to server")
-
-    logging.info("File sent to server")
+    logging.info("File downloaded from server")
 
 
-def handle_upload_request(clientSocket):
-    logging.info(f"Handling {UPLOAD}")
+def handle_download_request(clientSocket, serverIP, port, filepath, filename):
+    logging.info("Handling download")
 
-    if not os.path.exists(filepath + filename):
+    if not os.path.exists(filepath):
         logging.error(
-            f"Requested source file {filepath}/{filename} does not exists")
+            f"Requested destination file {filepath} does not exists")
         return
 
     try:
-        send_filename(clientSocket, UPLOAD, serverIP, port, filename)
+        send_filename(clientSocket, DOWNLOAD, serverIP, port, filename)
     except NameError as err:
         logging.error(
-            f"Message received from server is not an {ACK}: {format(err)}")
+            f"Message received from server is not an ACK: {format(err)}")
         return
 
     # Open file for sending using byte-array option.
-    file = open(filepath + filename, "rb")
+    # If file does not exist, then creates a new one.
+    file = open(filepath + filename, "wb")
 
     try:
-        send_file(file, clientSocket)
+        recv_file(file, clientSocket)
     except BaseException as err:
         logging.error(
             f"An error occurred when sending file to server: {format(err)}")
@@ -62,7 +61,7 @@ def handle_upload_request(clientSocket):
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog=UPLOAD, description='Upload a file to a given server')
+        prog=DOWNLOAD, description='Download a file from a given server')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',
@@ -84,10 +83,10 @@ def parse_arguments():
                            type=int,
                            help='server port',
                            default=DEFAULT_SERVER_PORT)
-    argParser.add_argument('-s', '--src',
+    argParser.add_argument('-d', '--dst',
                            type=str,
-                           help='source file path',
-                           default=DEFAULT_UPLOAD_FILEPATH,
+                           help='destination file path',
+                           default=DEFAULT_DOWNLOAD_FILEPATH,
                            metavar='FILEPATH')
     argParser.add_argument('-n', '--name',
                            type=str,
@@ -105,13 +104,9 @@ def start_client():
     logging.info("Initializing upload client")
     logging.debug("Arguments parsed")
 
-    global serverIP
     serverIP = args.host
-    global port
     port = args.port
-    global filepath
-    filepath = args.src
-    global filename
+    filepath = args.dst
     filename = args.name
 
     logging.debug(f"Server IP address: {serverIP}")
@@ -121,7 +116,7 @@ def start_client():
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    handle_upload_request(clientSocket)
+    handle_download_request(clientSocket, serverIP, port, filepath, filename)
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")

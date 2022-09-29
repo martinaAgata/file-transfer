@@ -2,16 +2,14 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from .client_handler import ClientHandler
-from .message import Message
-from ..utils import process_first_message
-from ..definitions import BUFSIZE,UPLOAD,DOWNLOAD,NAK,FIN,FIN_ACK,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_DIRPATH
-
-import sys
-sys.path.append('..') # TODO: DANGEROUS!
+from client_handler import ClientHandler
+from message import Message
+from definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
+                         DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
+                         DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
 
 
-def listen(serverSocket):
+def listen(serverSocket, dirpath):
     logging.info("Socket created and listening for requests")
 
     clientHandler = None
@@ -21,11 +19,6 @@ def listen(serverSocket):
         # Receive filepath first.
         firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
 
-        # IGNORE
-        logging.debug(f"First message received from {clientAddress}")
-        logging.debug(f"First message content: {firstMessage.decode()}")
-        (command, filename) = process_first_message(firstMessage)
-        logging.info(f"Received {command} command for file {filename}")
         message = Message(firstMessage, clientAddress)
 
         if clientAddress in clientsDict:
@@ -35,12 +28,15 @@ def listen(serverSocket):
             # NEW CLIENT
             # TODO: maybe check if file exists or NAK
             if message.type in [UPLOAD, DOWNLOAD]:
-                clientHandler = ClientHandler(clientAddress, serverSocket, dirpath)
+                clientHandler = ClientHandler(
+                    clientAddress,
+                    serverSocket,
+                    dirpath)
                 clientHandler.start_thread()
                 clientsDict[clientAddress] = clientHandler
             else:
                 # TODO: log me
-                # TODO: send reasons for NAK 
+                # TODO: send reasons for NAK
                 serverSocket.sendto(NAK.encode(), clientAddress)
                 continue
 
@@ -52,7 +48,7 @@ def listen(serverSocket):
         # If it is FIN -> Join client, and send FIN_ACK
         # If it is FIN_ACK -> We already have sent FIN, so just join client
         if message.type in [FIN, FIN_ACK]:
-            clientHandler.join(timeout=4)
+            clientHandler.join()
 
         # TODO: Handle case where command is not upload and download
         # if command == UPLOAD:
@@ -107,7 +103,6 @@ def start_server():
 
     host = args.host
     port = args.port
-    global dirpath
     dirpath = args.storage
 
     logging.debug(f"Host IP address: {host}")
@@ -122,7 +117,7 @@ def start_server():
         logging.debug("Directory created because it did not exist")
         os.mkdir(dirpath)
 
-    listen(serverSocket)
+    listen(serverSocket, dirpath)
 
     serverSocket.close()
     logging.info("Socket closed")

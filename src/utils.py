@@ -1,8 +1,8 @@
-import argparse
 import logging
 import os
-from socket import socket, AF_INET, SOCK_DGRAM
-from .definitions import BUFSIZE,UPLOAD,DOWNLOAD,DATA,FIN,FIN_ACK,ACK,NAK
+from definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
+                         FIN, FIN_ACK, ACK, NAK)
+
 
 def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
@@ -33,7 +33,8 @@ def recv_file(file, serverSocket, queue):
         logging.info(f"Received file from client {message.clientAddress}")
         serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
     else:
-        logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
+        logging.info(f"ERROR: Received a {message.type} packet at the end"
+                     "of file upload")
         # TODO: Check if sending FIN is the best choice to close the client.
         serverSocket.sendto(FIN.encode(), message.clientAddress)
 
@@ -65,19 +66,23 @@ def send_file(file, serverSocket, clientAddress, queue):
     if message.type == FIN:
         logging.info(f"Received file from client {message.clientAddress}")
         serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
+    elif not data:
+        # Inform the client that the download is finished
+        serverSocket.sendto(FIN.encode(), clientAddress)
+        logging.debug(f"Sent {FIN} to client {clientAddress}")
+        logging.info(f"Sent file to client {clientAddress}")
     else:
-        logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
+        logging.info(f"ERROR: Received a {message.type} packet at the end"
+                     "of file upload")
         # TODO: Check if sending FIN is the best choice to close the client.
         serverSocket.sendto(FIN.encode(), message.clientAddress)
 
-    # Inform the client that the download is finished
-    serverSocket.sendto(FIN.encode(), clientAddress)
-    logging.debug(f"Sent {FIN} to client {clientAddress}")
 
-    logging.info(f"Sent file to client {clientAddress}")
-
-
-def handle_upload_request(clientAddress, serverSocket, queue, dirpath, filename):
+def handle_upload_request(clientAddress,
+                          serverSocket,
+                          queue,
+                          dirpath,
+                          filename):
     logging.info("Handling upload request")
 
     # Send filename received ACK.
@@ -88,19 +93,25 @@ def handle_upload_request(clientAddress, serverSocket, queue, dirpath, filename)
     # Opens a file for writing. Creates a new file if it does not exist
     # or truncates the file if it exists.
     file = open(dirpath + filename, 'wb')
-    logging.debug(f"File to write in is {dirpath}/{filename}")
+    logging.debug(f"File to write in is at {dirpath}{filename}")
 
     recv_file(file, serverSocket, queue)
 
     file.close()
 
-def handle_download_request(clientAddress, serverSocket, queue, dirpath, filename):
+
+def handle_download_request(clientAddress,
+                            serverSocket,
+                            queue,
+                            dirpath,
+                            filename):
     logging.info("Handling download request")
 
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        serverSocket.sendto(f'{NAK} File does not exist.'.encode(), clientAddress)
+        serverSocket.sendto(f'{NAK} File does not exist.'.encode(),
+                            clientAddress)
         logging.debug(
             f"Sending {NAK} File does not exist to client {clientAddress}")
         return
@@ -129,6 +140,7 @@ def handle_action(address, socket, queue, dirpath):
         logging.error(
             f"Received an invalid command from client {address}")
 
+
 def is_ack(message):
     """
     Splits message into [ACK | NAK] + data
@@ -146,6 +158,7 @@ def is_ack(message):
         return (False, response)
     else:
         return (False, "Unknown acknowledge: " + message.decode())
+
 
 def send_filename(clientSocket, action, serverIP, port, filename):
     clientSocket.sendto((action + ' ' + filename).encode(),
