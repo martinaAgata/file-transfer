@@ -71,8 +71,8 @@ def send_file(file, serverSocket, clientAddress, queue):
         serverSocket.sendto(FIN.encode(), message.clientAddress)
 
     # Inform the client that the download is finished
-    serverSocket.sendto("FIN".encode(), clientAddress)
-    logging.debug(f"Sent FIN to client {clientAddress}")
+    serverSocket.sendto(FIN.encode(), clientAddress)
+    logging.debug(f"Sent {FIN} to client {clientAddress}")
 
     logging.info(f"Sent file to client {clientAddress}")
 
@@ -81,8 +81,8 @@ def handle_upload_request(clientAddress, serverSocket, queue, dirpath, filename)
     logging.info("Handling upload request")
 
     # Send filename received ACK.
-    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
-    logging.debug(f"ACK filename received sent to client {clientAddress}")
+    serverSocket.sendto(f'{ACK} Filename received.'.encode(), clientAddress)
+    logging.debug(f"{ACK} filename received sent to client {clientAddress}")
 
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist
@@ -100,15 +100,15 @@ def handle_download_request(clientAddress, serverSocket, queue, dirpath, filenam
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        serverSocket.sendto('NAK File does not exist.'.encode(), clientAddress)
+        serverSocket.sendto(f'{NAK} File does not exist.'.encode(), clientAddress)
         logging.debug(
-            f"Sending NAK File does not exist to client {clientAddress}")
+            f"Sending {NAK} File does not exist to client {clientAddress}")
         return
 
     # Send filename received ACK.
-    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
+    serverSocket.sendto(f'{ACK} Filename received.'.encode(), clientAddress)
     logging.debug(
-        f"ACK Filename received sent to client {clientAddress}")
+        f"{ACK} Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}/{filename}")
@@ -157,4 +157,4 @@ def send_filename(clientSocket, action, serverIP, port, filename):
 
     if not ack:
         raise NameError(response)
-    logging.debug("ACK for first message received from server")
+    logging.debug(f"{ACK} for first message received from server")

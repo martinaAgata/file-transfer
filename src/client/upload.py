@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from ..definitions import ACK,NAK,BUFSIZE,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_UPLOAD_FILEPATH
+from ..definitions import *
 from ..utils import send_filename,is_ack
 
 
@@ -22,18 +22,18 @@ def send_file(file, clientSocket):
             # TODO: Think a better error
             raise BaseException(response)
 
-        logging.debug("ACK received from server")
+        logging.debug(f"{ACK} received from server")
         data = file.read(BUFSIZE)
 
     # Inform the server that the download is finished
-    clientSocket.sendto("FIN".encode(), (serverIP, port))
-    logging.debug("Sent FIN to server")
+    clientSocket.sendto(FIN.encode(), (serverIP, port))
+    logging.debug(f"Sent {FIN} to server")
 
     logging.info("File sent to server")
 
 
 def handle_upload_request(clientSocket):
-    logging.info("Handling upload")
+    logging.info(f"Handling {UPLOAD}")
 
     if not os.path.exists(filepath + filename):
         logging.error(
@@ -44,7 +44,7 @@ def handle_upload_request(clientSocket):
         send_filename(clientSocket, UPLOAD, serverIP, port, filename)
     except NameError as err:
         logging.error(
-            f"Message received from server is not an ACK: {format(err)}")
+            f"Message received from server is not an {ACK}: {format(err)}")
         return
 
     # Open file for sending using byte-array option.
@@ -62,7 +62,7 @@ def handle_upload_request(clientSocket):
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog='upload', description='Upload a file to a given server')
+        prog=UPLOAD, description='Upload a file to a given server')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',

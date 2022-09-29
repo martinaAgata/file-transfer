@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from ..definitions import ACK,NAK,BUFSIZE,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_DOWNLOAD_FILEPATH
+from ..definitions import *
 from ..utils import send_filename
 
 
@@ -10,7 +10,7 @@ def recv_file(file, clientSocket):
     # Receive file content.
     maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    while maybeFileContent != "FIN".encode():
+    while maybeFileContent != FIN.encode():
         logging.debug("Received file content from server")
 
         # Write file content to new file
@@ -18,12 +18,12 @@ def recv_file(file, clientSocket):
         logging.debug("File content written to file")
 
         # Send file content received ACK.
-        clientSocket.sendto('ACK'.encode(), serverAddress)
-        logging.debug("Sent ACK to server")
+        clientSocket.sendto(ACK.encode(), serverAddress)
+        logging.debug(f"Sent {ACK} to server")
         maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    print('Received file content from the Server.')
-    logging.debug("Received FIN message from server")
+    print("Received file content from the Server.")
+    logging.debug(f"Received {FIN} message from server")
 
     logging.info("File downloaded from server")
 
@@ -59,7 +59,7 @@ def handle_download_request(clientSocket):
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog='upload', description='Download a file from a given server')
+        prog=DOWNLOAD, description='Download a file from a given server')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',
