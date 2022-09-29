@@ -101,7 +101,7 @@ def handle_download_request(serverSocket, clientAddress, filename):
     file.close()
 
 
-def listen(serverSocket):
+def listen(serverSocket, dirpath):
     logging.info("Socket created and listening for requests")
 
     while True:
@@ -133,7 +133,7 @@ def start_server():
 
     host = args.host
     port = args.port
-    global dirpath
+
     dirpath = args.storage
 
     logging.debug(f"Host IP address: {host}")
@@ -148,7 +148,7 @@ def start_server():
         logging.debug("Directory created because it did not exist")
         os.mkdir(dirpath)
 
-    listen(serverSocket)
+    listen(serverSocket, dirpath)
 
     serverSocket.close()
     logging.info("Socket closed")
