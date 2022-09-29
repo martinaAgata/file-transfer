@@ -3,39 +3,7 @@ import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
 from ..definitions import ACK,NAK,BUFSIZE,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_UPLOAD_FILEPATH
-
-
-# TODO: delete duplicated coed upload.py-download.py (is_ack, send_filename)
-
-
-# Splits message into [ACK | NAK] + data
-def is_ack(message):
-    splited_message = message.decode().split(" ", 1)
-    status = splited_message[0]
-
-    response = ''
-    if len(splited_message) == 2:
-        response = splited_message[1]
-
-    if status == ACK:
-        return (True, response)
-    elif status == NAK:
-        return (False, response)
-    else:
-        return (False, "Unknown acknowledge: " + message.decode())
-
-
-def send_filename(clientSocket):
-    clientSocket.sendto(('upload' + ' ' + filename).encode(),
-                        (serverIP, port))
-    logging.debug("Command and filename sent to server")
-    message, _ = clientSocket.recvfrom(BUFSIZE)
-
-    (ack, response) = is_ack(message)
-
-    if not ack:
-        raise NameError(response)
-    logging.debug("ACK for first message received from server")
+from ..utils import send_filename,is_ack
 
 
 def send_file(file, clientSocket):
@@ -73,7 +41,7 @@ def handle_upload_request(clientSocket):
         return
 
     try:
-        send_filename(clientSocket)
+        send_filename(clientSocket, UPLOAD, serverIP, port, filename)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
