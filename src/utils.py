@@ -36,28 +36,39 @@ def recv_file(file, serverSocket, queue):
         logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
         # TODO: Check if sending FIN is the best choice to close the client.
         serverSocket.sendto(FIN.encode(), message.clientAddress)
-        
-    
 
 
 def send_file(file, serverSocket, clientAddress, queue):
+    # Read first BUFSIZE bytes of the file
     data = file.read(BUFSIZE)
 
     while data:
         logging.debug("Read data from file")
+        # Send bytes to the client
         serverSocket.sendto(data, clientAddress)
         logging.debug(f"Sent data to client {clientAddress}")
 
+        # Receive answer from the client
         message = queue.get()
-        
+
         logging.debug(
             f"Received message {message.type} from client {clientAddress}")
 
+        # Check that is ACK
         if message.type != ACK:
             logging.error(f"ACK not received from client {clientAddress}")
             break  # TODO: wouldn't it be a return instead of a break?
 
+        # Read another BUFSIZE bytes
         data = file.read(BUFSIZE)
+
+    if message.type == FIN:
+        logging.info(f"Received file from client {message.clientAddress}")
+        serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
+    else:
+        logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
+        # TODO: Check if sending FIN is the best choice to close the client.
+        serverSocket.sendto(FIN.encode(), message.clientAddress)
 
     # Inform the client that the download is finished
     serverSocket.sendto("FIN".encode(), clientAddress)
