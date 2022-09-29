@@ -1,7 +1,7 @@
 import argparse
 import logging
-from socket import socket, AF_INET, SOCK_DGRAM
 import os
+from socket import socket, AF_INET, SOCK_DGRAM
 from .definitions import BUFSIZE,UPLOAD,DOWNLOAD,DATA,FIN,FIN_ACK,ACK,NAK
 
 def process_first_message(encodedFirstMessage):

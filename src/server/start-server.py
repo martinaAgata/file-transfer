@@ -1,109 +1,14 @@
 import argparse
-from socket import socket, AF_INET, SOCK_DGRAM
+import logging
 import os
+from socket import socket, AF_INET, SOCK_DGRAM
 from .client_handler import ClientHandler
 from .message import Message
 from ..utils import process_first_message
+from ..definitions import BUFSIZE,UPLOAD,DOWNLOAD,NAK,FIN,FIN_ACK,DEFAULT_LOGGING_LEVEL,DEFAULT_SERVER_IP,DEFAULT_SERVER_PORT,DEFAULT_DIRPATH
 
 import sys
 sys.path.append('..')
-from ..definitions import *
-
-
-# def process_first_message(encodedFirstMessage):
-
-#     firstMessage = encodedFirstMessage.decode().split()
-
-#     return (firstMessage[0], firstMessage[1])
-
-
-# def recv_file(file, serverSocket):
-#     # Receive file content.
-#     maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
-
-#     # TODO: Think about a better way to end the transfer
-#     while maybeFileContent != "END".encode():
-#         logging.debug(
-#             f"Received file content from client {clientAddress}")
-
-#         # Write file content to new file
-#         file.write(maybeFileContent)
-#         logging.debug("File content written")
-
-#         # Send file content received ACK.
-#         serverSocket.sendto('ACK'.encode(), clientAddress)
-#         logging.debug(f"ACK sent to client {clientAddress}")
-
-#         maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
-
-#     logging.info(f"Received file from client {clientAddress}")
-
-
-# def send_file(file, serverSocket, clientAddress):
-#     data = file.read(BUFSIZE)
-
-#     while data:
-#         logging.debug("Read data from file")
-#         serverSocket.sendto(data, clientAddress)
-#         logging.debug(f"Sent data to client {clientAddress}")
-
-#         message, serverAddress = serverSocket.recvfrom(BUFSIZE)
-#         logging.debug(
-#             f"Received message {message} from client {clientAddress}")
-
-#         if message.decode() != 'ACK':
-#             logging.error(f"ACK not received from client {clientAddress}")
-#             break  # TODO: wouldn't it be a return instead of a break?
-
-#         data = file.read(BUFSIZE)
-
-#     # inform the client that the download is finished
-#     serverSocket.sendto("FIN".encode(), clientAddress)
-#     logging.debug(f"Sent FIN to client {clientAddress}")
-
-#     logging.info(f"Sent file to client {clientAddress}")
-
-
-# def handle_upload_request(serverSocket, clientAddress, filename):
-#     logging.info("Handling upload request")
-
-#     # Send filename received ACK.
-#     serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
-#     logging.debug(f"ACK filename received sent to client {clientAddress}")
-
-#     # Create new file where to put the content of the file to receive.
-#     # Opens a file for writing. Creates a new file if it does not exist
-#     # or truncates the file if it exists.
-#     file = open(dirpath + filename, 'wb')
-#     logging.debug(f"File to write in is {dirpath}/{filename}")
-
-#     recv_file(file, serverSocket)
-
-#     file.close()
-
-
-# def handle_download_request(serverSocket, clientAddress, filename):
-#     logging.info("Handling download request")
-
-#     if not os.path.exists(dirpath + filename):
-#         logging.error(f"File does not exist: {dirpath}/{filename}")
-#         # Send filename does not exist NAK.
-#         serverSocket.sendto('NAK File does not exist.'.encode(), clientAddress)
-#         logging.debug(
-#             f"Sending NAK File does not exist to client {clientAddress}")
-#         return
-
-#     # Send filename received ACK.
-#     serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
-#     logging.debug(
-#         f"ACK Filename received sent to client {clientAddress}")
-
-#     file = open(dirpath + filename, 'rb')
-#     logging.debug(f"File to read from is {dirpath}/{filename}")
-
-#     send_file(file, serverSocket, clientAddress)
-
-#     file.close()
 
 
 def listen(serverSocket):

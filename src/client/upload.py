@@ -14,7 +14,7 @@ def send_file(file, clientSocket):
 
         clientSocket.sendto(data, (serverIP, port))
         logging.debug("Sent data to server")
-        message, serverAddress = clientSocket.recvfrom(BUFSIZE)
+        message, _ = clientSocket.recvfrom(BUFSIZE) # second element is serverAddress
         logging.debug(f"Received message {message} from server")
         (ack, response) = is_ack(message)
 
