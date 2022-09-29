@@ -2,11 +2,11 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from client_handler import ClientHandler
-from message import Message
-from definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
-                         DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
-                         DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
+from lib.client_handler import ClientHandler
+from lib.message import Message
+from lib.definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
+                             DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
+                             DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
 
 
 def listen(serverSocket, dirpath):

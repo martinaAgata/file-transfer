@@ -1,4 +1,4 @@
-from definitions import ACTIONS, DATA
+from .definitions import ACTIONS, DATA
 
 
 # TODO: check if should be moved to some utils file.

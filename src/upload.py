@@ -2,12 +2,12 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from definitions import (BUFSIZE, ACK, FIN, UPLOAD,
-                         DEFAULT_LOGGING_LEVEL,
-                         DEFAULT_SERVER_IP,
-                         DEFAULT_SERVER_PORT,
-                         DEFAULT_UPLOAD_FILEPATH)
-from utils import send_filename, is_ack
+from lib.definitions import (BUFSIZE, ACK, FIN, UPLOAD,
+                             DEFAULT_LOGGING_LEVEL,
+                             DEFAULT_SERVER_IP,
+                             DEFAULT_SERVER_PORT,
+                             DEFAULT_UPLOAD_FILEPATH)
+from lib.utils import send_filename, is_ack
 
 
 def send_file(file, clientSocket, serverIP, port):

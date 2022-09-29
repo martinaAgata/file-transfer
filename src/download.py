@@ -2,10 +2,12 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from definitions import (BUFSIZE, FIN, ACK, DOWNLOAD, DEFAULT_LOGGING_LEVEL,
-                         DEFAULT_SERVER_IP, DEFAULT_SERVER_PORT,
-                         DEFAULT_DOWNLOAD_FILEPATH)
-from utils import send_filename
+from lib.definitions import (BUFSIZE, FIN, ACK, DOWNLOAD,
+                             DEFAULT_LOGGING_LEVEL,
+                             DEFAULT_SERVER_IP,
+                             DEFAULT_SERVER_PORT,
+                             DEFAULT_DOWNLOAD_FILEPATH)
+from lib.utils import send_filename
 
 
 def recv_file(file, clientSocket):

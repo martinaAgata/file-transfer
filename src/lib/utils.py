@@ -1,7 +1,7 @@
 import logging
 import os
-from definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
-                         FIN, FIN_ACK, ACK, NAK)
+from .definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
+                          FIN, FIN_ACK, ACK, NAK)
 
 
 def process_first_message(encodedFirstMessage):

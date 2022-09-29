@@ -1,7 +1,7 @@
 import threading as thr
 import queue
-from definitions import TIMEOUT
-from utils import handle_action
+from .definitions import TIMEOUT
+from .utils import handle_action
 
 
 class ClientHandler:
