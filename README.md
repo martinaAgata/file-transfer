@@ -32,7 +32,7 @@ El mensaje es delegado al cliente correspondiente
 
 El mensaje de sobre que el cliente termino su transferencia
 
-
+```
 while True:
 	try:
 		msg = skt.recv()
@@ -41,9 +41,8 @@ while True:
 		pass
 	finally:
 		if there_is_free_thread and cola.not_empty():
-			client_free.update(cola.desencolar())
-		
-
+			client_free.update(cola.desencolar())	
+```
 
 
 
