@@ -1,8 +1,9 @@
 import logging
 import os
 from lib.client.communication import send_filename
-from lib.definitions import *
+from lib.definitions import DOWNLOAD, BUFSIZE, FIN, DATA, ACK
 from lib.client import encode, decode
+
 
 def handle(clientSocket):
     logging.info("Handling download")
@@ -31,6 +32,7 @@ def handle(clientSocket):
     finally:
         # Close everything
         file.close()
+
 
 def recv_file(file, clientSocket):
     # Receive file content.

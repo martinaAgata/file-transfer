@@ -1,8 +1,9 @@
 import logging
 import os
 from lib.client import decode, encode
-from lib.definitions import *
+from lib.definitions import BUFSIZE, ACK, DATA, FIN, UPLOAD
 from lib.client.communication import send_filename
+
 
 def handle(clientSocket):
     logging.info("Handling upload")
@@ -31,6 +32,7 @@ def handle(clientSocket):
         # Close everything
         file.close()
 
+
 def send_file(file, clientSocket):
     data = file.read(BUFSIZE)
 
@@ -39,7 +41,11 @@ def send_file(file, clientSocket):
 
         clientSocket.sendto(encode(DATA, data), (serverIP, port))
         logging.debug("Sent data to server")
+<<<<<<< HEAD
         message, serverAddress = clientSocket.recvfrom(BUFSIZE)
+=======
+        message, _ = clientSocket.recvfrom(BUFSIZE)  # second element is serverAddress
+>>>>>>> 7057773 (More and more lint fixes)
         logging.debug(f"Received message {message} from server")
         (type, response) = decode(message)
 

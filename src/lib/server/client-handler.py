@@ -17,7 +17,8 @@ class ClientHandler:
         self.socket = socket
         self.thread = thr.Thread(
             target=handle_action,
-            args=(address, socket, self.queue, dirpath))
+            args=(address, socket, self.queue, dirpath)
+        )
 
     def start_thread(self):
         """

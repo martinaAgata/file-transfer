@@ -1,5 +1,6 @@
 from lib.definitions import ACK, NAK, FIN, DATA
 
+
 # Splits message into [ACK | NAK] + data
 def decode(message):
     splited_message = message.decode().split(" ", 1)
@@ -14,5 +15,5 @@ def decode(message):
 
     if status not in [ACK, NAK, DATA]:
         return (None, "Unknown acknowledge: " + message.decode())
-    
+
     return (status, response)

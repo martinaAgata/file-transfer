@@ -1,6 +1,5 @@
 import logging
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import *
 from .upload.argparser import parse_arguments
 from .upload.request import handle
 
@@ -32,4 +31,3 @@ def start_client():
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")
-

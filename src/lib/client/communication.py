@@ -1,6 +1,7 @@
 import logging
 from lib.client import decode, encode
-from lib.definitions import *
+from lib.definitions import BUFSIZE, ACK
+
 
 def send_filename(type, filename, server, clientSocket):
     clientSocket.sendto(encode(type, filename), server)
@@ -11,7 +12,5 @@ def send_filename(type, filename, server, clientSocket):
 
     if type != ACK:
         raise NameError(response)
-        
-    logging.debug("ACK for first message received from server")
 
-    
+    logging.debug("ACK for first message received from server")

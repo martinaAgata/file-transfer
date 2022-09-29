@@ -1,5 +1,8 @@
 import argparse
-from lib.definitions import *
+import logging
+from lib.definitions import (DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
+                             DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
+
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(

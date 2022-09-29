@@ -1,7 +1,8 @@
 import logging
 import os
-from socket import socket, AF_INET, SOCK_DGRAM
-from .definitions import BUFSIZE,UPLOAD,DOWNLOAD,DATA,FIN
+from .definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
+                          FIN, FIN_ACK, ACK, NAK)
+
 
 def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
@@ -32,11 +33,10 @@ def recv_file(file, serverSocket, queue):
         logging.info(f"Received file from client {message.clientAddress}")
         serverSocket.sendto('FIN_ACK'.encode(), message.clientAddress)
     else:
-        logging.info(f"ERROR: Received a {message.type} packet at the end of file upload")
-        # TODO: Check if sending FIN is the best choice.
-        serverSocket.sendto('FIN'.encode(), message.clientAddress)
-        
-    
+        logging.info(f"ERROR: Received a {message.type} packet at the end"
+                     "of file upload")
+        # TODO: Check if sending FIN is the best choice to close the client.
+        serverSocket.sendto(FIN.encode(), message.clientAddress)
 
 
 def send_file(file, serverSocket, clientAddress, queue):
@@ -56,6 +56,15 @@ def send_file(file, serverSocket, clientAddress, queue):
             break  # TODO: wouldn't it be a return instead of a break?
 
         data = file.read(BUFSIZE)
+
+    if message.type == FIN:
+        logging.info(f"Received file from client {message.clientAddress}")
+        serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
+    else:
+        logging.info(f"ERROR: Received a {message.type} packet at the end of"
+                     "file upload")
+        # TODO: Check if sending FIN is the best choice to close the client.
+        serverSocket.sendto(FIN.encode(), message.clientAddress)
 
     # Inform the client that the download is finished
     serverSocket.sendto("FIN".encode(), clientAddress)
@@ -86,13 +95,18 @@ def handle_upload_request(clientAddress,
     file.close()
 
 
-def handle_download_request(clientAddress, serverSocket, queue, dirpath, filename):
+def handle_download_request(clientAddress,
+                            serverSocket,
+                            queue,
+                            dirpath,
+                            filename):
     logging.info("Handling download request")
 
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        serverSocket.sendto('NAK File does not exist.'.encode(), clientAddress)
+        serverSocket.sendto(f'{NAK} File does not exist.'.encode(),
+                            clientAddress)
         logging.debug(
             f"Sending NAK File does not exist to client {clientAddress}")
         return

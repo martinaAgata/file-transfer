@@ -1,4 +1,5 @@
-from ..definitions import ACTIONS,DATA
+from ..definitions import ACTIONS, DATA
+
 
 # TODO: check if should be moved to some utils file.
 def retrieveMessageAttributes(message):
@@ -7,10 +8,11 @@ def retrieveMessageAttributes(message):
     """
     decodedMessage = message.decode()
     splittedMessage = decodedMessage.split(" ", 1)
-    if splittedMessage[0] in ACTIONS: # TODO: move this.
-        return splittedMessage[0],splittedMessage[1]
+    if splittedMessage[0] in ACTIONS:  # TODO: move this.
+        return splittedMessage[0], splittedMessage[1]
     else:
-        return DATA,decodedMessage
+        return DATA, decodedMessage
+
 
 class Message:
     """
@@ -20,5 +22,5 @@ class Message:
         """
         Document me please!
         """
-        self.type,self.data = retrieveMessageAttributes(encodedMessage)
+        self.type, self.data = retrieveMessageAttributes(encodedMessage)
         self.clientAddress = clientAddress

@@ -1,4 +1,4 @@
-def encode(type, message = ""):
+def encode(type, message=""):
     if message != "":
         data = f"{type} {message}"
     else:
