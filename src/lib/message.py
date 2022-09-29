@@ -15,12 +15,12 @@ def retrieveMessageAttributes(message):
 
     splittedMessage = decodedMessage.split(" ", 1)
 
-    if splittedMessage[0] in ACTIONS:  # TODO: move this.
+    if splittedMessage[0] in ACTIONS:
         if len(splittedMessage) == 1:
             return splittedMessage[0], ""
         return splittedMessage[0], splittedMessage[1]
-    else:  # TODO: PLEASE CHECK THIS CASE!
-        return DATA, decodedMessage
+    # Message is text
+    return DATA, message
 
 
 class Message:
