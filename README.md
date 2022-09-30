@@ -12,7 +12,7 @@ Inicialización del servidor:
 $ python3 start-server.py -v
 ```
 
-Carga por parte de un cliente de un archivo denominado `example.MOV` que se encuentra dentro de la carpeta local `resources`:
+Carga por parte de un cliente de un archivo denominado `example.MOV` que existe dentro de la carpeta local `resources`:
 
 ```console
 $ python3 upload.py -n example.txt
