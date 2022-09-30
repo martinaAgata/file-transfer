@@ -52,15 +52,6 @@ def listen(serverSocket, dirpath):
             clientHandler.join()
             del clientsDict[clientAddress]
 
-        # TODO: Handle case where command is not upload and download
-        # if command == UPLOAD:
-        #     handle_upload_request(serverSocket, clientAddress, filename)
-        # elif command == DOWNLOAD:
-        #     handle_download_request(serverSocket, clientAddress, filename)
-        # else:
-        #     logging.error(
-        #         f"Received an invalid command from client {clientAddress}")
-
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
