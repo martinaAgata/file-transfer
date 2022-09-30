@@ -11,26 +11,6 @@ DEFAULT_LOGGING_LEVEL = logging.INFO
 
 # Splits message into [ACK | NAK] + data
 
-def recv_file(file, clientSocket, udpSocket):
-    bit, maybeFileContent, serverAddress = recv(clientSocket)
-
-    # TODO: Think about a better way to end the transfer
-    while maybeFileContent != "END".encode():
-        logging.debug(
-            f"Received file content from server {serverAddress}")
-
-        # Write file content to new file
-        file.write(maybeFileContent)
-        logging.debug("File content written")
-
-        # Send file content received ACK.
-        send(clientSocket, bit, 'ACK'.encode(), serverAddress)
-        logging.debug(f"ACK sent to server {serverAddress}")
-        bit, maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
-
-    logging.info(f"Received file from server {serverAddress}")
-
-
 def handle_download_request(clientSocket):
     logging.info("Handling download")
 
@@ -39,11 +19,11 @@ def handle_download_request(clientSocket):
             f"Requested destination file {filepath} does not exists")
         return
 
-    udpSocket = StopAndWait(clientSocket)
+    stopAndWait = StopAndWait(clientSocket)
     # Setting timeout only for first message
     clientSocket.settimeout(4)
     try:
-        udpSocket.send_filename('download', filename, serverIP, port)
+        stopAndWait.send_filename('download', filename, serverIP, port)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
@@ -57,7 +37,9 @@ def handle_download_request(clientSocket):
     file = open(filepath + filename, "wb")
 
     try:
-        recv_file(file, clientSocket, udpSocket)
+        bit, maybeFileContent, serverAddress = recv(clientSocket)
+        stopAndWait.recv_file(maybeFileContent, file, serverAddress, bit)
+        logging.info(f"Received file from server {serverAddress}")
     except BaseException as err:
         logging.error(
             f"An error occurred when receiving file from server: {format(err)}")

@@ -80,3 +80,17 @@ class StopAndWait:
             self.sendAndWaitForAck(data, clientAddress, port)
             data = file.read(BUFSIZE)
             self.alternateBit()
+
+    def recv_file(self, maybeFileContent, file, address, bit):
+        while maybeFileContent != "END".encode():
+            logging.debug(
+                f"Received file content from {address}")
+
+            # Write file content to new file
+            file.write(maybeFileContent)
+            logging.debug("File content written")
+
+            # Send file content received ACK.
+            send(self.socket, bit, 'ACK'.encode(), address)
+            logging.debug(f"ACK sent to {address}")
+            bit, maybeFileContent, clientAddress = self.recvCheckingDuplicates(bit)

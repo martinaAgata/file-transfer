@@ -17,37 +17,7 @@ def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
     return (firstMessage[0], firstMessage[1])
 
-
-def recv_file(file, serverSocket, udpSocket, bit):
-    bit, maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
-
-    # TODO: Think about a better way to end the transfer
-    while maybeFileContent != "END".encode():
-        logging.debug(
-            f"Received file content from client {clientAddress}")
-
-        # Write file content to new file
-        file.write(maybeFileContent)
-        logging.debug("File content written")
-
-        # Send file content received ACK.
-        send(serverSocket, bit, 'ACK'.encode(), clientAddress)
-        logging.debug(f"ACK sent to client {clientAddress}")
-        bit,maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
-
-    logging.info(f"Received file from client {clientAddress}")
-
-
-def send_file(file, clientAddress, udpSocket):
-    data = file.read(BUFSIZE)
-
-    while data:
-        logging.debug("Read data from file")
-        udpSocket.sendAndWaitForAck(data, clientAddress)
-        data = file.read(BUFSIZE)
-        udpSocket.alternateBit()
-
-def handle_upload_request(serverSocket, clientAddress, filename, bit):
+def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bit):
     logging.info("Handling upload request")
 
     # Send filename received ACK.
@@ -60,13 +30,14 @@ def handle_upload_request(serverSocket, clientAddress, filename, bit):
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is {dirpath}/{filename}")
 
-    udpSocket = StopAndWait(serverSocket)
-    recv_file(file, serverSocket, udpSocket, bit)
+    bit, maybeFileContent, clientAddress = stopAndWait.recvCheckingDuplicates(bit)
+    stopAndWait.recv_file(maybeFileContent, file, clientAddress, bit)
+    logging.info(f"Received file from client {clientAddress}")
 
     file.close()
 
 
-def handle_download_request(serverSocket, clientAddress, filename, bit):
+def handle_download_request(serverSocket, stopAndWait, clientAddress, filename, bit):
     logging.info("Handling download request")
 
     if not os.path.exists(dirpath + filename):
@@ -87,11 +58,10 @@ def handle_download_request(serverSocket, clientAddress, filename, bit):
 
     # Setting timeout for server because now is the sender side
     serverSocket.settimeout(4)
-    udpSocket = StopAndWait(serverSocket)
-    udpSocket.send_file(file, clientAddress)
+    stopAndWait.send_file(file, clientAddress)
 
     # TODO: FIX THIS BUG! Think about what we have to do if END is never received
-    send(serverSocket, udpSocket.bit, "END".encode(), clientAddress)
+    send(serverSocket, stopAndWait.bit, "END".encode(), clientAddress)
     logging.debug("Sending END to client")
     logging.info("File sent to client")
     file.close()
@@ -109,11 +79,12 @@ def listen(serverSocket):
         (command, filename) = process_first_message(firstMessage)
         logging.info(f"Received {command} command for file {filename}")
 
+        stopAndWait = StopAndWait(serverSocket)
         # TODO: Handle case where command is not upload and download
         if command == UPLOAD:
-            handle_upload_request(serverSocket, clientAddress, filename, bit)
+            handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bit)
         elif command == DOWNLOAD:
-            handle_download_request(serverSocket, clientAddress, filename, bit)
+            handle_download_request(serverSocket, stopAndWait, clientAddress, filename, bit)
         else:
             logging.error(
                 f"Received an invalid command from client {clientAddress}")

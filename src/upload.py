@@ -18,9 +18,9 @@ def handle_upload_request(clientSocket):
             f"Requested source file {filepath}/{filename} does not exists")
         return
 
-    udpSocket = StopAndWait(clientSocket)
+    stopAndWait = StopAndWait(clientSocket)
     try:
-        udpSocket.send_filename('upload', filename, serverIP, port)
+        stopAndWait.send_filename('upload', filename, serverIP, port)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
@@ -30,9 +30,9 @@ def handle_upload_request(clientSocket):
     file = open(filepath + filename, "rb")
 
     try:
-        udpSocket.send_file(file, serverIP, port)
+        stopAndWait.send_file(file, serverIP, port)
         # TODO: FIX THIS BUG! Think about what we have to do if END is never received
-        send(clientSocket, udpSocket.bit, "END".encode(), serverIP, port)
+        send(clientSocket, stopAndWait.bit, "END".encode(), serverIP, port)
         logging.debug("Sent END to server")
         logging.info("File sent to server")
     except BaseException as err:
