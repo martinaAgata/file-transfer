@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="502e5d5d-6f26-4030-b642-304415c74038" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/server/UDPServer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/server/UDPServer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/betrayal-grande.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/hello-world.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/download.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/upload.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/server/start-server.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,6 +39,13 @@
     &quot;last_opened_file_path&quot;: &quot;/Users/a446044/Documents/FIUBA/intro/tp1-intro&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/lib" />
+      <recent name="$PROJECT_DIR$/src/files" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -63,6 +75,7 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/tp1_intro$test.coverage" NAME="test Coverage Results" MODIFIED="1663620753574" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/server" />
     <SUITE FILE_PATH="coverage/tp1_intro$Thread.coverage" NAME="Thread Coverage Results" MODIFIED="1663489182994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

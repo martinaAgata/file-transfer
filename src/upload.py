@@ -1,72 +1,13 @@
 import argparse
-import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
+from StopAndWait import *
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
-DEFAULT_UPLOAD_FILEPATH = '../../resources/'
+DEFAULT_UPLOAD_FILEPATH = 'lib/resources/'
 DEFAULT_LOGGING_LEVEL = logging.INFO
-
-
-# TODO: delete duplicated coed upload.py-download.py (is_ack, send_filename)
-
-
-# Splits message into [ACK | NAK] + data
-def is_ack(message):
-    splited_message = message.decode().split(" ", 1)
-    status = splited_message[0]
-
-    response = ''
-    if len(splited_message) == 2:
-        response = splited_message[1]
-
-    if status == 'ACK':
-        return (True, response)
-    elif status == 'NAK':
-        return (False, response)
-    else:
-        return (False, "Unknown acknowledge: " + message.decode())
-
-
-def send_filename(clientSocket):
-    clientSocket.sendto(('upload' + ' ' + filename).encode(),
-                        (serverIP, port))
-    logging.debug("Command and filename sent to server")
-    message, _ = clientSocket.recvfrom(BUFSIZE)
-
-    (ack, response) = is_ack(message)
-
-    if not ack:
-        raise NameError(response)
-    logging.debug("ACK for first message received from server")
-
-
-def send_file(file, clientSocket):
-    data = file.read(BUFSIZE)
-
-    while data:
-        logging.debug("Read data from file")
-
-        clientSocket.sendto(data, (serverIP, port))
-        logging.debug("Sent data to server")
-        message, serverAddress = clientSocket.recvfrom(BUFSIZE)
-        logging.debug(f"Received message {message} from server")
-        (ack, response) = is_ack(message)
-
-        if not ack:
-            # TODO: Think a better error
-            raise BaseException(response)
-
-        logging.debug("ACK received from server")
-        data = file.read(BUFSIZE)
-
-    # Inform the server that the download is finished
-    clientSocket.sendto("END".encode(), (serverIP, port))
-    logging.debug("Sent END to server")
-
-    logging.info("File sent to server")
 
 
 def handle_upload_request(clientSocket):
@@ -77,8 +18,9 @@ def handle_upload_request(clientSocket):
             f"Requested source file {filepath}/{filename} does not exists")
         return
 
+    udpSocket = StopAndWait(clientSocket)
     try:
-        send_filename(clientSocket)
+        udpSocket.send_filename('upload', filename, serverIP, port)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
@@ -88,7 +30,11 @@ def handle_upload_request(clientSocket):
     file = open(filepath + filename, "rb")
 
     try:
-        send_file(file, clientSocket)
+        udpSocket.send_file(file, serverIP, port)
+        # TODO: FIX THIS BUG! Think about what we have to do if END is never received
+        send(clientSocket, udpSocket.bit, "END".encode(), serverIP, port)
+        logging.debug("Sent END to server")
+        logging.info("File sent to server")
     except BaseException as err:
         logging.error(
             f"An error occurred when sending file to server: {format(err)}")
@@ -157,9 +103,10 @@ def start_client():
     logging.debug(f"Filename: {filename}")
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
+    # TODO: we need to check this? 4 is an arbitrary value
+    clientSocket.settimeout(4)
 
     handle_upload_request(clientSocket)
-
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")
 

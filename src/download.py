@@ -1,66 +1,34 @@
 import argparse
-import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
+from StopAndWait import *
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
-DEFAULT_DOWNLOAD_FILEPATH = '../../downloads/'
+DEFAULT_DOWNLOAD_FILEPATH = 'lib/resources/'
 DEFAULT_LOGGING_LEVEL = logging.INFO
 
 # Splits message into [ACK | NAK] + data
 
+def recv_file(file, clientSocket, udpSocket):
+    bit, maybeFileContent, serverAddress = recv(clientSocket)
 
-def is_ack(message):
-    splited_message = message.decode().split(" ", 1)
-    status = splited_message[0]
-
-    response = ''
-    if len(splited_message) == 2:
-        response = splited_message[1]
-
-    if status == 'ACK':
-        return (True, response)
-    elif status == 'NAK':
-        return (False, response)
-    else:
-        return (False, "Unknown acknowledge: " + message.decode())
-
-
-def send_filename(clientSocket):
-    clientSocket.sendto(('download' + ' ' + filename).encode(),
-                        (serverIP, port))
-    logging.debug("Command and filename sent to server")
-    message, _ = clientSocket.recvfrom(BUFSIZE)
-
-    (ack, response) = is_ack(message)
-
-    if not ack:
-        raise NameError(response)
-    logging.debug("ACK for first message received from server")
-
-
-def recv_file(file, clientSocket):
-    # Receive file content.
-    maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
-
+    # TODO: Think about a better way to end the transfer
     while maybeFileContent != "END".encode():
-        logging.debug("Received file content from server")
+        logging.debug(
+            f"Received file content from server {serverAddress}")
 
         # Write file content to new file
         file.write(maybeFileContent)
-        logging.debug("File content written to file")
+        logging.debug("File content written")
 
         # Send file content received ACK.
-        clientSocket.sendto('ACK'.encode(), serverAddress)
-        logging.debug("Sent ACK to server")
-        maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
+        send(clientSocket, bit, 'ACK'.encode(), serverAddress)
+        logging.debug(f"ACK sent to server {serverAddress}")
+        bit, maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
 
-    print('Received file content from the Server.')
-    logging.debug("Received END message from server")
-
-    logging.info("File downloaded from server")
+    logging.info(f"Received file from server {serverAddress}")
 
 
 def handle_download_request(clientSocket):
@@ -71,22 +39,28 @@ def handle_download_request(clientSocket):
             f"Requested destination file {filepath} does not exists")
         return
 
+    udpSocket = StopAndWait(clientSocket)
+    # Setting timeout only for first message
+    clientSocket.settimeout(4)
     try:
-        send_filename(clientSocket)
+        udpSocket.send_filename('download', filename, serverIP, port)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
         return
+    # Now the client is the one who receives the data, so
+    # it shouldn't have a timeout
+    clientSocket.settimeout(None)
 
-    # Open file for sending using byte-array option.
+    # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
 
     try:
-        recv_file(file, clientSocket)
+        recv_file(file, clientSocket, udpSocket)
     except BaseException as err:
         logging.error(
-            f"An error occurred when sending file to server: {format(err)}")
+            f"An error occurred when receiving file from server: {format(err)}")
     finally:
         # Close everything
         file.close()

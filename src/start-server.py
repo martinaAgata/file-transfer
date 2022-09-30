@@ -1,7 +1,9 @@
 import argparse
-import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
+from StopAndWait import *
+from UDPHandler import *
+
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
@@ -11,17 +13,13 @@ DEFAULT_LOGGING_LEVEL = logging.INFO
 UPLOAD = "upload"
 DOWNLOAD = "download"
 
-
 def process_first_message(encodedFirstMessage):
-
     firstMessage = encodedFirstMessage.decode().split()
-
     return (firstMessage[0], firstMessage[1])
 
 
-def recv_file(file, serverSocket):
-    # Receive file content.
-    maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
+def recv_file(file, serverSocket, udpSocket, bit):
+    bit, maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
 
     # TODO: Think about a better way to end the transfer
     while maybeFileContent != "END".encode():
@@ -33,44 +31,27 @@ def recv_file(file, serverSocket):
         logging.debug("File content written")
 
         # Send file content received ACK.
-        serverSocket.sendto('ACK'.encode(), clientAddress)
+        send(serverSocket, bit, 'ACK'.encode(), clientAddress)
         logging.debug(f"ACK sent to client {clientAddress}")
-
-        maybeFileContent, clientAddress = serverSocket.recvfrom(BUFSIZE)
+        bit,maybeFileContent, clientAddress = udpSocket.recvCheckingDuplicates(bit)
 
     logging.info(f"Received file from client {clientAddress}")
 
 
-def send_file(file, serverSocket, clientAddress):
+def send_file(file, clientAddress, udpSocket):
     data = file.read(BUFSIZE)
 
     while data:
         logging.debug("Read data from file")
-        serverSocket.sendto(data, clientAddress)
-        logging.debug(f"Sent data to client {clientAddress}")
-
-        message, serverAddress = serverSocket.recvfrom(BUFSIZE)
-        logging.debug(
-            f"Received message {message} from client {clientAddress}")
-
-        if message.decode() != 'ACK':
-            logging.error(f"ACK not received from client {clientAddress}")
-            break  # TODO: wouldn't it be a return instead of a break?
-
+        udpSocket.sendAndWaitForAck(data, clientAddress)
         data = file.read(BUFSIZE)
+        udpSocket.alternateBit()
 
-    # inform the client that the download is finished
-    serverSocket.sendto("END".encode(), clientAddress)
-    logging.debug(f"Sent END to client {clientAddress}")
-
-    logging.info(f"Sent file to client {clientAddress}")
-
-
-def handle_upload_request(serverSocket, clientAddress, filename):
+def handle_upload_request(serverSocket, clientAddress, filename, bit):
     logging.info("Handling upload request")
 
     # Send filename received ACK.
-    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
+    send(serverSocket, bit, 'ACK Filename received.'.encode(), clientAddress)
     logging.debug(f"ACK filename received sent to client {clientAddress}")
 
     # Create new file where to put the content of the file to receive.
@@ -79,32 +60,40 @@ def handle_upload_request(serverSocket, clientAddress, filename):
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is {dirpath}/{filename}")
 
-    recv_file(file, serverSocket)
+    udpSocket = StopAndWait(serverSocket)
+    recv_file(file, serverSocket, udpSocket, bit)
 
     file.close()
 
 
-def handle_download_request(serverSocket, clientAddress, filename):
+def handle_download_request(serverSocket, clientAddress, filename, bit):
     logging.info("Handling download request")
 
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        serverSocket.sendto('NAK File does not exist.'.encode(), clientAddress)
+        send(serverSocket, bit, 'NAK File does not exist.'.encode(), clientAddress)
         logging.debug(
             f"Sending NAK File does not exist to client {clientAddress}")
         return
 
     # Send filename received ACK.
-    serverSocket.sendto('ACK Filename received.'.encode(), clientAddress)
+    send(serverSocket, bit, 'ACK Filename received.'.encode(), clientAddress)
     logging.debug(
         f"ACK Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}/{filename}")
 
-    send_file(file, serverSocket, clientAddress)
+    # Setting timeout for server because now is the sender side
+    serverSocket.settimeout(4)
+    udpSocket = StopAndWait(serverSocket)
+    udpSocket.send_file(file, clientAddress)
 
+    # TODO: FIX THIS BUG! Think about what we have to do if END is never received
+    send(serverSocket, udpSocket.bit, "END".encode(), clientAddress)
+    logging.debug("Sending END to client")
+    logging.info("File sent to client")
     file.close()
 
 
@@ -113,7 +102,7 @@ def listen(serverSocket):
 
     while True:
         # Receive filepath first.
-        firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
+        bit, firstMessage, clientAddress = recv(serverSocket)
 
         logging.debug(f"First message received from {clientAddress}")
         logging.debug(f"First message content: {firstMessage}")
@@ -122,13 +111,13 @@ def listen(serverSocket):
 
         # TODO: Handle case where command is not upload and download
         if command == UPLOAD:
-            handle_upload_request(serverSocket, clientAddress, filename)
+            handle_upload_request(serverSocket, clientAddress, filename, bit)
         elif command == DOWNLOAD:
-            handle_download_request(serverSocket, clientAddress, filename)
+            handle_download_request(serverSocket, clientAddress, filename, bit)
         else:
             logging.error(
                 f"Received an invalid command from client {clientAddress}")
-
+        break
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
