@@ -1,6 +1,5 @@
 ## File Transfer
 
-### Descripción
 Aplicación de red de arquitectura cliente-servidor que implemente la funcionalidad de transferencia de archivos mediante las operaciones: UPLOAD (de un cliente hacia el servidor) y DOWNLOAD (del servidor hacia el cliente).
 
 
