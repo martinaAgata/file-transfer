@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+from functools import reduce
 from socket import socket, AF_INET, SOCK_DGRAM
 from lib.client_handler import ClientHandler
 from lib.message import Message
@@ -21,6 +22,8 @@ def listen(serverSocket, dirpath):
 
         message = Message(firstMessage, clientAddress)
 
+
+        # Get the clientHanlder
         if clientAddress in clientsDict:
             # OLD CLIENT
             clientHandler = clientsDict[clientAddress]
@@ -40,6 +43,7 @@ def listen(serverSocket, dirpath):
                 serverSocket.sendto(NAK.encode(), clientAddress)
                 continue
 
+        # Send the message to the clientHandler
         clientHandler.send(message)
 
         # TODO: Check that every time that a FIN is send, the thread go to the
@@ -51,6 +55,15 @@ def listen(serverSocket, dirpath):
         if message.type in [FIN, FIN_ACK]:
             clientHandler.join()
             del clientsDict[clientAddress]
+
+
+    # This code is unreachable until we set ctrl+c signal
+    for (clientAddress, clientHandler) in clientsDict:
+        clientHandler.join()
+        del clientsDict[clientAddress]
+
+    clientsDict.clear()
+
 
 
 def parse_arguments():
