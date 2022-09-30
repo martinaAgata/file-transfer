@@ -30,7 +30,7 @@ class StopAndWait:
     def checkDuplicateACK(self, bitRcv, data, port, serverIP):
         while bitRcv != self.bit:
             try:
-                logging.debug(f"ACK repeated, do nothing and waiting for next ACK")
+                logging.debug(f"ACK duplicated, do nothing and waiting for next ACK")
                 bitRcv, message, serverAddress = recv(self.socket)
                 logging.debug(f"Receiving ACK {bitRcv}, {message} from {serverAddress}")
             except Exception:
@@ -63,6 +63,7 @@ class StopAndWait:
         bitRcv, maybeFileContent, clientAddress = recv(self.socket)
 
         while bitRcv == bit:
+            logging.debug("Duplicated package, ignoring and resending ACK")
             send(self.socket, bit, 'ACK'.encode(), clientAddress)
             bitRcv, maybeFileContent, clientAddress = recv(self.socket)
 
