@@ -1,7 +1,7 @@
 import argparse
 import logging
 import os
-from functools import reduce
+import sys
 from socket import socket, AF_INET, SOCK_DGRAM
 from lib.client_handler import ClientHandler
 from lib.message import Message
@@ -17,45 +17,47 @@ def listen(serverSocket, dirpath):
     clientsDict = {}
 
     while True:
-        # Receive filepath first.
-        firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
+        try:
+            # Receive filepath first.
+            firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
 
-        message = Message(firstMessage, clientAddress)
+            message = Message(firstMessage, clientAddress)
 
-
-        # Get the clientHanlder
-        if clientAddress in clientsDict:
-            # OLD CLIENT
-            clientHandler = clientsDict[clientAddress]
-        else:
-            # NEW CLIENT
-            # TODO: maybe check if file exists or NAK
-            if message.type in [UPLOAD, DOWNLOAD]:
-                clientHandler = ClientHandler(
-                    clientAddress,
-                    serverSocket,
-                    dirpath)
-                clientHandler.start_thread()
-                clientsDict[clientAddress] = clientHandler
+            # Get the clientHanlder
+            if clientAddress in clientsDict:
+                # OLD CLIENT
+                clientHandler = clientsDict[clientAddress]
             else:
-                # TODO: log me
-                # TODO: send reasons for NAK
-                serverSocket.sendto(NAK.encode(), clientAddress)
-                continue
+                # NEW CLIENT
+                # TODO: maybe check if file exists or NAK
+                if message.type in [UPLOAD, DOWNLOAD]:
+                    clientHandler = ClientHandler(
+                        clientAddress,
+                        serverSocket,
+                        dirpath)
+                    clientHandler.start_thread()
+                    clientsDict[clientAddress] = clientHandler
+                else:
+                    # TODO: log me
+                    # TODO: send reasons for NAK
+                    serverSocket.sendto(NAK.encode(), clientAddress)
+                    continue
 
-        # Send the message to the clientHandler
-        clientHandler.send(message)
+            # Send the message to the clientHandler
+            clientHandler.send(message)
 
-        # TODO: Check that every time that a FIN is send, the thread go to the
-        # end of the scope.
-        #
-        # If it is FIN -> Join client, and send FIN_ACK
-        # If it is FIN_ACK -> We already have sent FIN, so just join client
-        # In both cases, we must remove the clientHandler from the clientsDict
-        if message.type in [FIN, FIN_ACK]:
-            clientHandler.join()
-            del clientsDict[clientAddress]
-
+            # TODO: Check that every time that a FIN is send, the thread go to
+            # the end of the scope.
+            #
+            # If FIN -> Join client, and send FIN_ACK
+            # If FIN_ACK -> We've already sent FIN, so just join client
+            # In both cases, we must remove clientHandler from clientsDict
+            if message.type in [FIN, FIN_ACK]:
+                clientHandler.join()
+                del clientsDict[clientAddress]
+        except KeyboardInterrupt:
+            print()
+            break
 
     # This code is unreachable until we set ctrl+c signal
     for (clientAddress, clientHandler) in clientsDict:
@@ -64,7 +66,6 @@ def listen(serverSocket, dirpath):
         clientHandler.join()
 
     clientsDict.clear()
-
 
 
 def parse_arguments():
@@ -128,6 +129,7 @@ def start_server():
 
     serverSocket.close()
     logging.info("Socket closed")
+    sys.exit()
 
 
 def main():
