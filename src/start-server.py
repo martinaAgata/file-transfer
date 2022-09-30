@@ -47,8 +47,10 @@ def listen(serverSocket, dirpath):
         #
         # If it is FIN -> Join client, and send FIN_ACK
         # If it is FIN_ACK -> We already have sent FIN, so just join client
+        # In both cases, we must remove the clientHandler from the clientsDict
         if message.type in [FIN, FIN_ACK]:
             clientHandler.join()
+            del clientsDict[clientAddress]
 
         # TODO: Handle case where command is not upload and download
         # if command == UPLOAD:
