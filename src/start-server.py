@@ -59,8 +59,9 @@ def listen(serverSocket, dirpath):
 
     # This code is unreachable until we set ctrl+c signal
     for (clientAddress, clientHandler) in clientsDict:
+        message = Message("FIN".encode(), clientAddress)
+        clientHandler.send(message)
         clientHandler.join()
-        del clientsDict[clientAddress]
 
     clientsDict.clear()
 
