@@ -15,11 +15,11 @@ $ python3 start-server.py -v
 Carga por parte de un cliente de un archivo denominado `example.MOV` que existe dentro de la carpeta local `resources`:
 
 ```console
-$ python3 upload.py -n example.txt
+$ python3 upload.py -n example.MOV
 ```
 
 Descarga de archivo denominado `example.MOV` que se encuentra dentro de la carpeta `files` del servidor:
 
 ```console
-$ python3 download.py -n example.txt
+$ python3 download.py -n example.MOV
 ```
