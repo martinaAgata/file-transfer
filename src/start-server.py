@@ -54,8 +54,11 @@ def listen(serverSocket, dirpath):
             # In both cases, we must remove clientHandler from clientsDict
             if message.type in [FIN, FIN_ACK]:
                 clientHandler.join()
+                logging.debug(f"Client {clientAddress} thread was joined")
                 del clientsDict[clientAddress]
+                logging.debug(f"Client {clientAddress} has been disconnected")
         except KeyboardInterrupt:
+            logging.debug("A keyboard interrupt signal has been received")
             print()
             break
 
@@ -64,6 +67,7 @@ def listen(serverSocket, dirpath):
         message = Message("FIN".encode(), clientAddress)
         clientHandler.send(message)
         clientHandler.join()
+        logging.debug(f"Client {clientAddress} thread was joined")
 
     clientsDict.clear()
 
@@ -128,7 +132,7 @@ def start_server():
     listen(serverSocket, dirpath)
 
     serverSocket.close()
-    logging.info("Socket closed")
+    logging.info("Server exiting")
     sys.exit()
 
 

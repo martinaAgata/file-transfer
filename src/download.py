@@ -59,6 +59,7 @@ def handle_download_request(clientSocket, serverIP, port, filepath, filename):
     finally:
         # Close everything
         file.close()
+        logging.debug("File was closed")
 
 
 def parse_arguments():
