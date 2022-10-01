@@ -13,12 +13,9 @@ def createHeader(bit):
     return struct.pack("!I", bit)
 
 
-def send(socket, bit, data, serverIP, port=None):
+def send(socket, bit, data, address):
     header = createHeader(bit)
-    if not port:
-        socket.sendto(header + data, serverIP)
-    else:
-        socket.sendto(header + data, (serverIP, port))
+    socket.sendto(header + data, address)
 
 def recv(socket):
     message, address = socket.recvfrom(BUFSIZE + 4)

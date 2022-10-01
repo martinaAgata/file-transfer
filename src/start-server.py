@@ -48,41 +48,13 @@ def handle_download_request(serverSocket, stopAndWait, clientAddress, filename, 
     send(serverSocket, lastBit, 'ACK'.encode(), clientAddress)
     stopAndWait.alternateBit()
     logging.debug(
-        f"ACK Filename received sent to client {clientAddress}")
+        f"ACK sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}/{filename}")
+    stopAndWait.send_file(file, clientAddress, TIMEOUT)
 
-    try:
-        data = file.read(BUFSIZE)
-
-        while data:
-            logging.debug("Read data from file")
-            send(serverSocket, stopAndWait.bit, data, clientAddress)
-            _, message, _ = stopAndWait.receive(clientAddress, lastSentMsg=data, lastSentBit=stopAndWait.bit,
-                                                timeout=TIMEOUT)
-            stopAndWait.alternateBit()
-            if message != "ACK".encode():
-                if message == "FIN".encode():
-                    logging.info(f"FIN messsage received.")
-                    send(serverSocket, stopAndWait.bit, "FIN_ACK".encode(), clientAddress)
-                else:
-                    logging.error(f"Unknown message received {message.decode()}")
-                    send(serverSocket, stopAndWait.bit, "FIN".encode(), clientAddress)
-                return
-            data = file.read(BUFSIZE)
-        # TODO: FIX THIS BUG! Think about what we have to do if END is never received
-        send(serverSocket, stopAndWait.bit, "FIN".encode(), clientAddress)
-        _, message, _ = stopAndWait.receive(clientAddress, lastSentMsg="FIN".encode(), lastSentBit=stopAndWait.bit,
-                                            timeout=TIMEOUT)
-        logging.debug("Sent FIN to client")
-        logging.info("File sent to client")
-    except BaseException as err:
-        logging.error(
-            f"An error occurred when sending file to client: {format(err)}")
-    finally:
-        # Close everything
-        file.close()
+    file.close()
 
 
 def listen(serverSocket):

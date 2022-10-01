@@ -22,7 +22,7 @@ def handle_download_request(clientSocket):
     stopAndWait = StopAndWait(clientSocket)
     # stopAndWait.send_filename('upload', filename, serverIP, port)
     downloadCmd = ('downloads' + ' ' + filename).encode()
-    send(clientSocket, stopAndWait.bit, downloadCmd, serverIP, port)
+    send(clientSocket, stopAndWait.bit, downloadCmd, (serverIP, port))
     try:
         lastBit, message, serverAddress = stopAndWait.receive((serverIP, port), lastSentMsg=downloadCmd,
                                                           lastSentBit=stopAndWait.bit, timeout=TIMEOUT)
@@ -34,10 +34,10 @@ def handle_download_request(clientSocket):
     if message != "ACK".encode():
         if message == "FIN".encode():
             logging.info(f"FIN messsage received.")
-            send(clientSocket, stopAndWait.bit, "FIN_ACK".encode(), serverIP, port)
+            send(clientSocket, stopAndWait.bit, "FIN_ACK".encode(), (serverIP, port))
         else:
             logging.error(f"Unknown message received {message.decode()}")
-            send(clientSocket, stopAndWait.bit, "FIN".encode(), serverIP, port)
+            send(clientSocket, stopAndWait.bit, "FIN".encode(), (serverIP, port))
         return
 
     # Open file for receiving using byte-array option.
