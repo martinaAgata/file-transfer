@@ -1,11 +1,10 @@
 import logging
 import os
 from lib.client.communication import send_filename
-from lib.definitions import DOWNLOAD, BUFSIZE, FIN, DATA, ACK
-from lib.client import encode, decode
+from lib.definitions import DOWNLOAD, BUFSIZE, FIN, ACK
 
 
-def handle(clientSocket):
+def handle(clientSocket, serverIP, port, filepath, filename):
     logging.info("Handling download")
 
     if not os.path.exists(filepath):
@@ -14,7 +13,7 @@ def handle(clientSocket):
         return
 
     try:
-        send_filename(DOWNLOAD, filename, (serverIP, port), clientSocket)
+        send_filename(clientSocket, DOWNLOAD, serverIP, port, filename)
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
@@ -32,27 +31,26 @@ def handle(clientSocket):
     finally:
         # Close everything
         file.close()
+        logging.debug("File was closed")
 
 
 def recv_file(file, clientSocket):
     # Receive file content.
     maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    while maybeFileContent != encode(FIN):
+    while maybeFileContent != FIN.encode():
         logging.debug("Received file content from server")
 
         # Write file content to new file
-        type, fileContent = decode(maybeFileContent)
-        if type == DATA:
-            file.write(fileContent)
-            logging.debug("File content written to file")
-            # Send file content received ACK.
-            clientSocket.sendto(encode(ACK), serverAddress)
-            logging.debug("Sent ACK to server")
+        file.write(maybeFileContent)
+        logging.debug("File content written to file")
 
+        # Send file content received ACK.
+        clientSocket.sendto(ACK.encode(), serverAddress)
+        logging.debug(f"Sent {ACK} to server")
         maybeFileContent, serverAddress = clientSocket.recvfrom(BUFSIZE)
 
-    print('Received file content from the Server.')
-    logging.debug("Received FIN message from server")
+    print("Received file content from the Server.")
+    logging.debug(f"Received {FIN} message from server")
 
     logging.info("File downloaded from server")

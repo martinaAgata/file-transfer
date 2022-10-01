@@ -6,12 +6,21 @@ def retrieveMessageAttributes(message):
     """
     Returns a tuple with type and data retrieved from the message
     """
-    decodedMessage = message.decode()
+    decodedMessage = None
+
+    try:
+        decodedMessage = message.decode()
+    except UnicodeDecodeError:
+        return DATA, message
+
     splittedMessage = decodedMessage.split(" ", 1)
-    if splittedMessage[0] in ACTIONS:  # TODO: move this.
+
+    if splittedMessage[0] in ACTIONS:
+        if len(splittedMessage) == 1:
+            return splittedMessage[0], ""
         return splittedMessage[0], splittedMessage[1]
-    else:
-        return DATA, decodedMessage
+    # Message is text
+    return DATA, message
 
 
 class Message:

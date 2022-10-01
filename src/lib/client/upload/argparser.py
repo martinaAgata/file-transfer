@@ -1,12 +1,13 @@
 import argparse
 import logging
 from lib.definitions import (DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
-                             DEFAULT_SERVER_PORT, DEFAULT_UPLOAD_FILEPATH)
+                             DEFAULT_SERVER_PORT, DEFAULT_UPLOAD_FILEPATH,
+                             UPLOAD)
 
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog='upload', description='Upload a file to a given server')
+        prog=UPLOAD, description='Upload a file to a given server')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',

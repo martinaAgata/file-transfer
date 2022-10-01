@@ -1,7 +1,7 @@
 import logging
 from socket import socket, AF_INET, SOCK_DGRAM
-from .download.argparser import parse_arguments
-from .download.request import handle
+from .argparser import parse_arguments
+from .request import handle
 
 
 def start_client():
@@ -11,13 +11,9 @@ def start_client():
     logging.info("Initializing upload client")
     logging.debug("Arguments parsed")
 
-    global serverIP
     serverIP = args.host
-    global port
     port = args.port
-    global filepath
     filepath = args.dst
-    global filename
     filename = args.name
 
     logging.debug(f"Server IP address: {serverIP}")
@@ -27,7 +23,7 @@ def start_client():
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
 
-    handle(clientSocket)
+    handle(clientSocket, serverIP, port, filepath, filename)
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")
