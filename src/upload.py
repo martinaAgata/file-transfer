@@ -127,7 +127,6 @@ def start_client():
     logging.debug(f"Socket {clientSocket} closed")
 
 
-
 def main():
     start_client()
 

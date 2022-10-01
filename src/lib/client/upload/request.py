@@ -41,11 +41,7 @@ def send_file(file, clientSocket):
 
         clientSocket.sendto(encode(DATA, data), (serverIP, port))
         logging.debug("Sent data to server")
-<<<<<<< HEAD
-        message, serverAddress = clientSocket.recvfrom(BUFSIZE)
-=======
         message, _ = clientSocket.recvfrom(BUFSIZE)  # second element is serverAddress
->>>>>>> 7057773 (More and more lint fixes)
         logging.debug(f"Received message {message} from server")
         (type, response) = decode(message)
 
