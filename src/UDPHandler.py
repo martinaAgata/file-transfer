@@ -15,7 +15,7 @@ def createHeader(bit):
 
 def send(socket, bit, data, serverIP, port=None):
     header = createHeader(bit)
-    if port == None:
+    if not port:
         socket.sendto(header + data, serverIP)
     else:
         socket.sendto(header + data, (serverIP, port))

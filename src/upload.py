@@ -2,6 +2,7 @@ import argparse
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
 from StopAndWait import *
+import traceback
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
@@ -20,7 +21,18 @@ def handle_upload_request(clientSocket):
 
     stopAndWait = StopAndWait(clientSocket)
     try:
-        stopAndWait.send_filename('upload', filename, serverIP, port)
+        # stopAndWait.send_filename('upload', filename, serverIP, port)
+        uploadCmd = ('upload' + ' ' + filename).encode()
+        send(clientSocket, stopAndWait.bit, uploadCmd, serverIP, port)
+        _, message, _ = stopAndWait.receive((serverIP, port), lastSentMsg=uploadCmd, lastSentBit=stopAndWait.bit, timeout=4)
+        stopAndWait.alternateBit()
+        if message != "ACK".encode():
+            if message == "FIN".encode():
+                send(clientSocket, stopAndWait.bit, "FIN_ACK".encode(), serverIP, port)
+            else:
+                send(clientSocket, stopAndWait.bit, "FIN".encode(), serverIP, port)
+            return
+
     except NameError as err:
         logging.error(
             f"Message received from server is not an ACK: {format(err)}")
@@ -30,9 +42,27 @@ def handle_upload_request(clientSocket):
     file = open(filepath + filename, "rb")
 
     try:
-        stopAndWait.send_file(file, serverIP, port)
+        data = file.read(BUFSIZE)
+
+        while data:
+            logging.debug("Read data from file")
+            send(clientSocket, stopAndWait.bit, data, serverIP, port)
+            _, message,_ = stopAndWait.receive((serverIP, port), lastSentMsg=data, lastSentBit=stopAndWait.bit,
+                                timeout=4)
+            stopAndWait.alternateBit()
+            if message != "ACK".encode():
+                if message == "FIN".encode():
+                    send(clientSocket, stopAndWait.bit, "FIN_ACK".encode(), serverIP, port)
+                else:
+                    send(clientSocket, stopAndWait.bit, "FIN".encode(), serverIP, port)
+                return
+            data = file.read(BUFSIZE)
+        #stopAndWait.send_file(file, serverIP, port)
         # TODO: FIX THIS BUG! Think about what we have to do if END is never received
-        send(clientSocket, stopAndWait.bit, "END".encode(), serverIP, port)
+        send(clientSocket, stopAndWait.bit, "FIN".encode(), serverIP, port)
+        _ , message, _ = stopAndWait.receive((serverIP, port), lastSentMsg="FIN".encode(), lastSentBit=stopAndWait.bit,
+                            timeout=4)
+        #send(clientSocket, stopAndWait.bit, "END".encode(), serverIP, port)
         logging.debug("Sent END to server")
         logging.info("File sent to server")
     except BaseException as err:

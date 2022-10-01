@@ -69,6 +69,27 @@ class StopAndWait:
 
         return bitRcv, maybeFileContent, clientAddress
 
+    def receive(self, address=None, lastSentMsg=None, lastSentBit=None, lastRcvMsg=None, lastRcvBit=None, timeout=None):
+        # TODO: change 5 to a constant
+        for i in range(0, 5):
+            try:
+                # If it is a sender, we set a timeout, if not, recv is blocked until new message
+                self.socket.settimeout(timeout)
+                bit, data, address = recv(self.socket)
+
+                # If it's the first message, then None is set, so the while condition is always false
+                while lastRcvBit == bit:
+                    logging.debug(f"Duplicated package with bit = {bit} and {data[:15]}")
+                    # The recv sends another ACK msg, but the sender do nothing
+                    if not timeout:
+                        send(self.socket, bit, lastSentMsg, address)
+                    self.socket.settimeout(timeout)
+                    bit, data, address = recv(self.socket)
+                return bit, data, address
+            except Exception:
+                # When sender throw a timeout exception, we re-send the message, at least until <CONSTANT> times
+                send(self.socket, lastSentBit, lastSentMsg, address)
+
     def send_filename(self, command, filename, serverIP, port):
         self.sendAndWaitForAck((command + ' ' + filename).encode(), serverIP, port)
         self.alternateBit()

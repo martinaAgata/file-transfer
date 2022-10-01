@@ -17,11 +17,11 @@ def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
     return (firstMessage[0], firstMessage[1])
 
-def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bit):
+def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, lastBit):
     logging.info("Handling upload request")
 
-    # Send filename received ACK.
-    send(serverSocket, bit, 'ACK Filename received.'.encode(), clientAddress)
+    # Send received ACK.
+    send(serverSocket, lastBit, 'ACK'.encode(), clientAddress)
     logging.debug(f"ACK filename received sent to client {clientAddress}")
 
     # Create new file where to put the content of the file to receive.
@@ -29,9 +29,22 @@ def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bi
     # or truncates the file if it exists.
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is {dirpath}/{filename}")
+    lastBit, maybeFileContent, address = stopAndWait.receive(clientAddress, lastSentMsg='ACK'.encode(), lastRcvBit=lastBit)
 
-    bit, maybeFileContent, clientAddress = stopAndWait.recvCheckingDuplicates(bit)
-    stopAndWait.recv_file(maybeFileContent, file, clientAddress, bit)
+    while maybeFileContent != "FIN".encode():
+        logging.debug(
+            f"Received file content from {address}")
+
+        # Write file content to new file
+        file.write(maybeFileContent)
+        logging.debug("File content written")
+
+        # Send file content received ACK.
+        send(serverSocket, lastBit, 'ACK'.encode(), address)
+        logging.debug(f"ACK sent to {address}")
+        lastBit, maybeFileContent, address = stopAndWait.receive(clientAddress, lastSentMsg='ACK'.encode(),lastRcvBit=lastBit)
+    send(serverSocket, lastBit, 'FIN_ACK'.encode(), address)
+    logging.debug(f"FIN_ACK sent to client {clientAddress}")
     logging.info(f"Received file from client {clientAddress}")
 
     file.close()
@@ -72,14 +85,15 @@ def listen(serverSocket):
 
     while True:
         # Receive filepath first.
-        bit, firstMessage, clientAddress = recv(serverSocket)
+        #bit, firstMessage, clientAddress = recv(serverSocket)
+        stopAndWait = StopAndWait(serverSocket)
+        bit, firstMessage, clientAddress = stopAndWait.receive()
 
         logging.debug(f"First message received from {clientAddress}")
         logging.debug(f"First message content: {firstMessage}")
         (command, filename) = process_first_message(firstMessage)
         logging.info(f"Received {command} command for file {filename}")
 
-        stopAndWait = StopAndWait(serverSocket)
         # TODO: Handle case where command is not upload and download
         if command == UPLOAD:
             handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bit)
