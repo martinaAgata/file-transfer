@@ -1,5 +1,5 @@
 import logging
-from ..definitions import (DOWNLOAD, UPLOAD)
+from ..definitions import DOWNLOAD, UPLOAD
 from .download.request import handle as handle_download_request
 from .upload.request import handle as handle_upload_request
 
@@ -12,5 +12,4 @@ def handle_action(address, socket, queue, dirpath):
     elif action.type == DOWNLOAD:
         handle_download_request(address, socket, queue, dirpath, action.data)
     else:
-        logging.error(
-            f"Received an invalid command from client {address}")
+        logging.error(f"Received an invalid command from client {address}")

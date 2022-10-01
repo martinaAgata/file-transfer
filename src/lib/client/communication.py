@@ -4,8 +4,7 @@ from lib.utils import is_ack
 
 
 def send_filename(clientSocket, action, serverIP, port, filename):
-    clientSocket.sendto((action + ' ' + filename).encode(),
-                        (serverIP, port))
+    clientSocket.sendto((action + ' ' + filename).encode(), (serverIP, port))
     logging.debug("Command and filename sent to server")
     message, _ = clientSocket.recvfrom(BUFSIZE)
 

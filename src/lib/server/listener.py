@@ -1,7 +1,8 @@
 import logging
 from .client_handler import ClientHandler
 from .message import Message
-from lib.definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK)
+from lib.definitions import BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK
+
 
 def listen(serverSocket, dirpath):
     logging.info("Socket created and listening for requests")
@@ -24,10 +25,7 @@ def listen(serverSocket, dirpath):
                 # NEW CLIENT
                 # TODO: maybe check if file exists or NAK
                 if message.type in [UPLOAD, DOWNLOAD]:
-                    clientHandler = ClientHandler(
-                        clientAddress,
-                        serverSocket,
-                        dirpath)
+                    clientHandler = ClientHandler(clientAddress, serverSocket, dirpath)
                     clientHandler.start_thread()
                     clientsDict[clientAddress] = clientHandler
                 else:

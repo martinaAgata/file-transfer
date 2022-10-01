@@ -1,5 +1,5 @@
 import logging
-from lib.definitions import (ACK, DATA, FIN, FIN_ACK)
+from lib.definitions import ACK, DATA, FIN, FIN_ACK
 
 
 def handle(clientAddress, serverSocket, queue, dirpath, filename):
@@ -19,6 +19,7 @@ def handle(clientAddress, serverSocket, queue, dirpath, filename):
 
     file.close()
 
+
 def recv_file(file, serverSocket, queue):
     # Receive file content (should be first packet).
     message = queue.get()
@@ -26,8 +27,7 @@ def recv_file(file, serverSocket, queue):
     # TODO: Think about a better way to end the transfer.
     # TODO: Perhaps it could stop iterating if type IS NOT DATA.
     while message.type == DATA:
-        logging.debug(
-            f"Received file content from client {message.clientAddress}")
+        logging.debug(f"Received file content from client {message.clientAddress}")
 
         # Write file content to new file (it should already be encoded)
         file.write(message.data)
@@ -43,7 +43,8 @@ def recv_file(file, serverSocket, queue):
         logging.info(f"Received file from client {message.clientAddress}")
         serverSocket.sendto(FIN_ACK.encode(), message.clientAddress)
     else:
-        logging.info(f"ERROR: Received a {message.type} packet at the end"
-                     "of file upload")
+        logging.info(
+            f"ERROR: Received a {message.type} packet at the end" "of file upload"
+        )
         # TODO: Check if sending FIN is the best choice to close the client.
         serverSocket.sendto(FIN.encode(), message.clientAddress)

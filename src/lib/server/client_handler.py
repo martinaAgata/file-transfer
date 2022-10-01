@@ -8,6 +8,7 @@ class ClientHandler:
     """
     Document me please!
     """
+
     def __init__(self, address, socket, dirpath):
         """
         Creates a Client Handler and initializes its initial attributes.
@@ -16,8 +17,8 @@ class ClientHandler:
         self.address = address
         self.socket = socket
         self.thread = thr.Thread(
-            target=handle_action,
-            args=(address, socket, self.queue, dirpath))
+            target=handle_action, args=(address, socket, self.queue, dirpath)
+        )
 
     def start_thread(self):
         """

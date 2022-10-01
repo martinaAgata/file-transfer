@@ -1,6 +1,7 @@
 import logging
 import os
-from lib.definitions import (BUFSIZE, ACK, FIN, FIN_ACK, NAK)
+from lib.definitions import BUFSIZE, ACK, FIN, FIN_ACK, NAK
+
 
 def handle(clientAddress, serverSocket, queue, dirpath, filename):
     logging.info("Handling download request")
@@ -8,16 +9,13 @@ def handle(clientAddress, serverSocket, queue, dirpath, filename):
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        serverSocket.sendto(f'{NAK} File does not exist.'.encode(),
-                            clientAddress)
-        logging.debug(
-            f"Sending {NAK} File does not exist to client {clientAddress}")
+        serverSocket.sendto(f'{NAK} File does not exist.'.encode(), clientAddress)
+        logging.debug(f"Sending {NAK} File does not exist to client {clientAddress}")
         return
 
     # Send filename received ACK.
     serverSocket.sendto(f'{ACK} Filename received.'.encode(), clientAddress)
-    logging.debug(
-        f"{ACK} Filename received sent to client {clientAddress}")
+    logging.debug(f"{ACK} Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}/{filename}")
@@ -25,6 +23,7 @@ def handle(clientAddress, serverSocket, queue, dirpath, filename):
     send_file(file, serverSocket, clientAddress, queue)
 
     file.close()
+
 
 def send_file(file, serverSocket, clientAddress, queue):
     # Read first BUFSIZE bytes of the file
@@ -39,8 +38,7 @@ def send_file(file, serverSocket, clientAddress, queue):
         # Receive answer from the client
         message = queue.get()
 
-        logging.debug(
-            f"Received message {message.type} from client {clientAddress}")
+        logging.debug(f"Received message {message.type} from client {clientAddress}")
 
         # Check that is ACK
         if message.type != ACK:
@@ -59,7 +57,8 @@ def send_file(file, serverSocket, clientAddress, queue):
         logging.debug(f"Sent {FIN} to client {clientAddress}")
         logging.info(f"Sent file to client {clientAddress}")
     else:
-        logging.info(f"ERROR: Received a {message.type} packet at the end"
-                     "of file upload")
+        logging.info(
+            f"ERROR: Received a {message.type} packet at the end" "of file upload"
+        )
         # TODO: Check if sending FIN is the best choice to close the client.
         serverSocket.sendto(FIN.encode(), message.clientAddress)

@@ -1,4 +1,4 @@
-from .definitions import (ACK, NAK)
+from .definitions import ACK, NAK
 
 
 def process_first_message(encodedFirstMessage):

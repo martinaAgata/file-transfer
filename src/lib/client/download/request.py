@@ -8,15 +8,13 @@ def handle(clientSocket, serverIP, port, filepath, filename):
     logging.info("Handling download")
 
     if not os.path.exists(filepath):
-        logging.error(
-            f"Requested destination file {filepath} does not exists")
+        logging.error(f"Requested destination file {filepath} does not exists")
         return
 
     try:
         send_filename(clientSocket, DOWNLOAD, serverIP, port, filename)
     except NameError as err:
-        logging.error(
-            f"Message received from server is not an ACK: {format(err)}")
+        logging.error(f"Message received from server is not an ACK: {format(err)}")
         return
 
     # Open file for sending using byte-array option.
@@ -26,8 +24,7 @@ def handle(clientSocket, serverIP, port, filepath, filename):
     try:
         recv_file(file, clientSocket)
     except BaseException as err:
-        logging.error(
-            f"An error occurred when sending file to server: {format(err)}")
+        logging.error(f"An error occurred when sending file to server: {format(err)}")
     finally:
         # Close everything
         file.close()

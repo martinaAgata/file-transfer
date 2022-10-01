@@ -27,6 +27,7 @@ class Message:
     """
     Document me please!
     """
+
     def __init__(self, encodedMessage, clientAddress):
         """
         Document me please!
