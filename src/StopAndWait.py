@@ -90,6 +90,19 @@ class StopAndWait:
                 # When sender throw a timeout exception, we re-send the message, at least until <CONSTANT> times
                 send(self.socket, lastSentBit, lastSentMsg, address)
 
+        self.socket.settimeout(timeout)
+        bit, data, address = recv(self.socket)
+
+        # If it's the first message, then None is set, so the while condition is always false
+        while lastRcvBit == bit:
+            logging.debug(f"Duplicated package with bit = {bit} and {data[:15]}")
+            # The recv sends another ACK msg, but the sender do nothing
+            if not timeout:
+                send(self.socket, bit, lastSentMsg, address)
+            self.socket.settimeout(timeout)
+            bit, data, address = recv(self.socket)
+        return bit, data, address
+
     def send_filename(self, command, filename, serverIP, port):
         self.sendAndWaitForAck((command + ' ' + filename).encode(), serverIP, port)
         self.alternateBit()

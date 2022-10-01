@@ -6,39 +6,67 @@ from StopAndWait import *
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
-DEFAULT_DOWNLOAD_FILEPATH = 'lib/resources/'
+DEFAULT_DOWNLOAD_FILEPATH = 'lib/downloads/'
 DEFAULT_LOGGING_LEVEL = logging.INFO
-
+TIMEOUT = 2
 # Splits message into [ACK | NAK] + data
 
 def handle_download_request(clientSocket):
-    logging.info("Handling download")
+    logging.info("Handling downloads")
 
     if not os.path.exists(filepath):
         logging.error(
-            f"Requested destination file {filepath} does not exists")
+            f"Requested source file {filepath} does not exists")
         return
 
     stopAndWait = StopAndWait(clientSocket)
-    # Setting timeout only for first message
-    clientSocket.settimeout(4)
+    # stopAndWait.send_filename('upload', filename, serverIP, port)
+    downloadCmd = ('downloads' + ' ' + filename).encode()
+    send(clientSocket, stopAndWait.bit, downloadCmd, serverIP, port)
     try:
-        stopAndWait.send_filename('download', filename, serverIP, port)
-    except NameError as err:
+        lastBit, message, serverAddress = stopAndWait.receive((serverIP, port), lastSentMsg=downloadCmd,
+                                                          lastSentBit=stopAndWait.bit, timeout=TIMEOUT)
+    except Exception:
         logging.error(
-            f"Message received from server is not an ACK: {format(err)}")
+            f"Timeout while waiting for ACK.")
         return
-    # Now the client is the one who receives the data, so
-    # it shouldn't have a timeout
-    clientSocket.settimeout(None)
+
+    if message != "ACK".encode():
+        if message == "FIN".encode():
+            logging.info(f"FIN messsage received.")
+            send(clientSocket, stopAndWait.bit, "FIN_ACK".encode(), serverIP, port)
+        else:
+            logging.error(f"Unknown message received {message.decode()}")
+            send(clientSocket, stopAndWait.bit, "FIN".encode(), serverIP, port)
+        return
 
     # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
 
     try:
-        bit, maybeFileContent, serverAddress = recv(clientSocket)
-        stopAndWait.recv_file(maybeFileContent, file, serverAddress, bit)
+        # bit, maybeFileContent, serverAddress = recv(clientSocket)
+        # stopAndWait.recv_file(maybeFileContent, file, serverAddress, bit)
+        # logging.info(f"Received file from server {serverAddress}")
+
+        logging.debug(f"File to write in is {filepath}/{filename}")
+        lastBit, maybeFileContent, address = stopAndWait.receive(serverAddress)
+
+        while maybeFileContent != "FIN".encode():
+            logging.debug(
+                f"Received file content from {address}")
+
+            # Write file content to new file
+            file.write(maybeFileContent)
+            logging.debug("File content written")
+
+            # Send file content received ACK.
+            send(clientSocket, lastBit, 'ACK'.encode(), address)
+            logging.debug(f"ACK sent to {address}")
+            lastBit, maybeFileContent, address = stopAndWait.receive(serverAddress, lastSentMsg='ACK'.encode(),
+                                                                     lastRcvBit=lastBit)
+        send(clientSocket, lastBit, 'FIN_ACK'.encode(), address)
+        logging.debug(f"FIN_ACK sent to server {serverAddress}")
         logging.info(f"Received file from server {serverAddress}")
     except BaseException as err:
         logging.error(

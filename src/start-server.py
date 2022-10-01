@@ -11,8 +11,8 @@ BUFSIZE = 2048
 DEFAULT_DIRPATH = 'files/'
 DEFAULT_LOGGING_LEVEL = logging.INFO
 UPLOAD = "upload"
-DOWNLOAD = "download"
-
+DOWNLOAD = "downloads"
+TIMEOUT=2
 def process_first_message(encodedFirstMessage):
     firstMessage = encodedFirstMessage.decode().split()
     return (firstMessage[0], firstMessage[1])
@@ -50,42 +50,62 @@ def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, la
     file.close()
 
 
-def handle_download_request(serverSocket, stopAndWait, clientAddress, filename, bit):
-    logging.info("Handling download request")
+def handle_download_request(serverSocket, stopAndWait, clientAddress, filename, lastBit):
+    logging.info("Handling downloads request")
 
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        send(serverSocket, bit, 'NAK File does not exist.'.encode(), clientAddress)
+        send(serverSocket, lastBit, 'FIN'.encode(), clientAddress)
         logging.debug(
-            f"Sending NAK File does not exist to client {clientAddress}")
+            f"Sending FIN: File does not exist to client {clientAddress}")
         return
 
     # Send filename received ACK.
-    send(serverSocket, bit, 'ACK Filename received.'.encode(), clientAddress)
+    send(serverSocket, lastBit, 'ACK'.encode(), clientAddress)
+    stopAndWait.alternateBit()
     logging.debug(
         f"ACK Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}/{filename}")
 
-    # Setting timeout for server because now is the sender side
-    serverSocket.settimeout(4)
-    stopAndWait.send_file(file, clientAddress)
+    try:
+        data = file.read(BUFSIZE)
 
-    # TODO: FIX THIS BUG! Think about what we have to do if END is never received
-    send(serverSocket, stopAndWait.bit, "END".encode(), clientAddress)
-    logging.debug("Sending END to client")
-    logging.info("File sent to client")
-    file.close()
+        while data:
+            logging.debug("Read data from file")
+            send(serverSocket, stopAndWait.bit, data, clientAddress)
+            _, message, _ = stopAndWait.receive(clientAddress, lastSentMsg=data, lastSentBit=stopAndWait.bit,
+                                                timeout=TIMEOUT)
+            stopAndWait.alternateBit()
+            if message != "ACK".encode():
+                if message == "FIN".encode():
+                    logging.info(f"FIN messsage received.")
+                    send(serverSocket, stopAndWait.bit, "FIN_ACK".encode(), clientAddress)
+                else:
+                    logging.error(f"Unknown message received {message.decode()}")
+                    send(serverSocket, stopAndWait.bit, "FIN".encode(), clientAddress)
+                return
+            data = file.read(BUFSIZE)
+        # TODO: FIX THIS BUG! Think about what we have to do if END is never received
+        send(serverSocket, stopAndWait.bit, "FIN".encode(), clientAddress)
+        _, message, _ = stopAndWait.receive(clientAddress, lastSentMsg="FIN".encode(), lastSentBit=stopAndWait.bit,
+                                            timeout=TIMEOUT)
+        logging.debug("Sent FIN to client")
+        logging.info("File sent to client")
+    except BaseException as err:
+        logging.error(
+            f"An error occurred when sending file to client: {format(err)}")
+    finally:
+        # Close everything
+        file.close()
 
 
 def listen(serverSocket):
     logging.info("Socket created and listening for requests")
 
     while True:
-        # Receive filepath first.
-        #bit, firstMessage, clientAddress = recv(serverSocket)
         stopAndWait = StopAndWait(serverSocket)
         bit, firstMessage, clientAddress = stopAndWait.receive()
 
@@ -94,7 +114,7 @@ def listen(serverSocket):
         (command, filename) = process_first_message(firstMessage)
         logging.info(f"Received {command} command for file {filename}")
 
-        # TODO: Handle case where command is not upload and download
+        # TODO: Handle case where command is not upload and downloads
         if command == UPLOAD:
             handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, bit)
         elif command == DOWNLOAD:
