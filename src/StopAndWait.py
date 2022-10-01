@@ -88,6 +88,7 @@ class StopAndWait:
                 return bit, data, address
             except Exception:
                 # When sender throw a timeout exception, we re-send the message, at least until <CONSTANT> times
+                logging.debug(f"Socket raise timeout exception while waiting for receiving message.")
                 send(self.socket, lastSentBit, lastSentMsg, address)
 
         self.socket.settimeout(timeout)
@@ -116,8 +117,10 @@ class StopAndWait:
             data = file.read(BUFSIZE)
             self.alternateBit()
 
-    def recv_file(self, maybeFileContent, file, address, bit):
-        while maybeFileContent != "END".encode():
+    def recv_file(self, file, address, lastSentMsg=None, lastRcvBit=None):
+        lastBit, maybeFileContent, address = self.receive(address, lastSentMsg=lastSentMsg, lastRcvBit=lastRcvBit)
+
+        while maybeFileContent != "FIN".encode():
             logging.debug(
                 f"Received file content from {address}")
 
@@ -126,6 +129,10 @@ class StopAndWait:
             logging.debug("File content written")
 
             # Send file content received ACK.
-            send(self.socket, bit, 'ACK'.encode(), address)
+            send(self.socket, lastBit, 'ACK'.encode(), address)
             logging.debug(f"ACK sent to {address}")
-            bit, maybeFileContent, clientAddress = self.recvCheckingDuplicates(bit)
+            lastBit, maybeFileContent, address = self.receive(address, lastSentMsg='ACK'.encode(),
+                                                                     lastRcvBit=lastBit)
+        send(self.socket, lastBit, 'FIN_ACK'.encode(), address)
+        logging.debug(f"FIN_ACK sent to {address}")
+        logging.info(f"Received file from {address}")

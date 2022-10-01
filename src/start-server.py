@@ -29,26 +29,9 @@ def handle_upload_request(serverSocket, stopAndWait, clientAddress, filename, la
     # or truncates the file if it exists.
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is {dirpath}/{filename}")
-    lastBit, maybeFileContent, address = stopAndWait.receive(clientAddress, lastSentMsg='ACK'.encode(), lastRcvBit=lastBit)
-
-    while maybeFileContent != "FIN".encode():
-        logging.debug(
-            f"Received file content from {address}")
-
-        # Write file content to new file
-        file.write(maybeFileContent)
-        logging.debug("File content written")
-
-        # Send file content received ACK.
-        send(serverSocket, lastBit, 'ACK'.encode(), address)
-        logging.debug(f"ACK sent to {address}")
-        lastBit, maybeFileContent, address = stopAndWait.receive(clientAddress, lastSentMsg='ACK'.encode(),lastRcvBit=lastBit)
-    send(serverSocket, lastBit, 'FIN_ACK'.encode(), address)
-    logging.debug(f"FIN_ACK sent to client {clientAddress}")
-    logging.info(f"Received file from client {clientAddress}")
+    stopAndWait.recv_file(file, clientAddress, lastSentMsg='ACK'.encode(), lastRcvBit=lastBit)
 
     file.close()
-
 
 def handle_download_request(serverSocket, stopAndWait, clientAddress, filename, lastBit):
     logging.info("Handling downloads request")

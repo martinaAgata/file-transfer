@@ -43,37 +43,11 @@ def handle_download_request(clientSocket):
     # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
+    logging.debug(f"File to write in is {filepath}/{filename}")
+    stopAndWait.recv_file(file, serverAddress)
 
-    try:
-        # bit, maybeFileContent, serverAddress = recv(clientSocket)
-        # stopAndWait.recv_file(maybeFileContent, file, serverAddress, bit)
-        # logging.info(f"Received file from server {serverAddress}")
+    file.close()
 
-        logging.debug(f"File to write in is {filepath}/{filename}")
-        lastBit, maybeFileContent, address = stopAndWait.receive(serverAddress)
-
-        while maybeFileContent != "FIN".encode():
-            logging.debug(
-                f"Received file content from {address}")
-
-            # Write file content to new file
-            file.write(maybeFileContent)
-            logging.debug("File content written")
-
-            # Send file content received ACK.
-            send(clientSocket, lastBit, 'ACK'.encode(), address)
-            logging.debug(f"ACK sent to {address}")
-            lastBit, maybeFileContent, address = stopAndWait.receive(serverAddress, lastSentMsg='ACK'.encode(),
-                                                                     lastRcvBit=lastBit)
-        send(clientSocket, lastBit, 'FIN_ACK'.encode(), address)
-        logging.debug(f"FIN_ACK sent to server {serverAddress}")
-        logging.info(f"Received file from server {serverAddress}")
-    except BaseException as err:
-        logging.error(
-            f"An error occurred when receiving file from server: {format(err)}")
-    finally:
-        # Close everything
-        file.close()
 
 
 def parse_arguments():
