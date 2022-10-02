@@ -112,6 +112,9 @@ def start_client():
     global filename
     filename = args.name
 
+    if filepath[-1] != '/':
+        filepath +=  '/'
+
     logging.debug(f"Server IP address: {serverIP}")
     logging.debug(f"Server port: {port}")
     logging.debug(f"Filepath: {filepath}")
