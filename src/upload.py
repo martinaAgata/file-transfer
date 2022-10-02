@@ -2,13 +2,14 @@ import argparse
 import logging
 from socket import socket, AF_INET, SOCK_DGRAM
 import os
+import queue
 
 DEFAULT_SERVER_IP = '127.0.0.1'
 DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
 DEFAULT_UPLOAD_FILEPATH = 'lib/resources/'
 DEFAULT_LOGGING_LEVEL = logging.INFO
-
+N = 5
 
 # TODO: delete duplicated coed upload.py-download.py (is_ack, send_filename)
 
@@ -44,7 +45,16 @@ def send_filename(clientSocket):
 
 
 def send_file(file, clientSocket):
+    fileList = []
     data = file.read(BUFSIZE)
+
+    while data:
+        fileList.append(data)
+        data = file.read(BUFSIZE)
+
+    fifo = queue.Queue(N)
+
+    nextSeqNum = 0
 
     while data:
         logging.debug("Read data from file")
