@@ -1,8 +1,12 @@
 import logging
 import queue
-from .timer import TimerPackageResender
-from .definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
+from .timer import RepeatingTimer
+from .definitions import (BUFSIZE, GBN_BASE_PACKAGE_TIMEOUT, UPLOAD, DOWNLOAD, DATA,
                           FIN, FIN_ACK, ACK, NAK, TIMEOUT)
+
+def sendWindow(transferMethod, queue, address):
+    for (bit, data) in list(queue):
+        transferMethod.sendMessage(bit, data, address)
 
 class GoBackN:
     def __init__(self, transferMethod):
@@ -27,7 +31,7 @@ class GoBackN:
                 self.sentPkgsWithoutACK.put((self.nextSeqNumber, data))
                 # si es el primero en ser enviado de la ventana (base), inicio timer
                 if self.base == nextseqnum:
-                    timer = TimerPackageResender(self.transferMethod, self.sentPkgsWithoutACK, address)
+                    timer = RepeatingTimer(GBN_BASE_PACKAGE_TIMEOUT, sendWindow, self.transferMethod, queue, address)
                     timer.start()
                 # ya envie el pkg, envío el siguiente si está dentro de la ventana    
                 nextseqnum += 1
@@ -54,7 +58,7 @@ class GoBackN:
                 self.base = message.bit + 1
                 for _ in range(self.base, message.bit):
                     self.sentPkgsWithoutACK.get()
-                    
+
                 if self.base == self.nextSeqNumber:
                   timer.stop()
                     

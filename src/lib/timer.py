@@ -1,24 +1,22 @@
-import time
-import threading as thr
-from .definitions import GBN_BASE_PACKAGE_TIMEOUT
+from threading import Timer
 
-class TimerPackageResender:
-    
-    def __init__(self, transferMethod, queue, address):
-        self.queue = queue
-        self.transferMethod = transferMethod
-        self.thread = thr.Thread(
-            target=self.timer, args=(address)
-        )
-    
+class RepeatingTimer:
+
+    def __init__(self, interval, f, *args, **kwargs):
+        self.interval = interval
+        self.f = f
+        self.args = args
+        self.kwargs = kwargs
+
+        self.timer = None
+
+    def callback(self):
+        self.f(*self.args, **self.kwargs)
+        self.start()
+
+    def cancel(self):
+        self.timer.cancel()
+
     def start(self):
-        self.thread.start()
-
-    def stop(self):
-        self.thread.join()
-
-    def timer(self, address):
-        time.sleep(GBN_BASE_PACKAGE_TIMEOUT)
-        for (bit, data) in list(self.queue):
-            self.transferMethod.sendMessage(bit, data, address)
-        self.stop()
+        self.timer = Timer(self.interval, self.callback)
+        self.timer.start()
