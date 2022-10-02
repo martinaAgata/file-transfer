@@ -52,8 +52,7 @@ def handle_upload_request(clientSocket, serverAddress):
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
-    stopAndWait.alternateBit()
-    print("BIT DEL TRANSFER: ", stopAndWait.bit)
+    
     stopAndWait.send_file(file, serverAddress, TIMEOUT)
 
     file.close()

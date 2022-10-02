@@ -52,8 +52,7 @@ def handle_download_request(clientSocket, serverAddress):
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
-    stopAndWait.alternateBit()
-    print("BIT DEL TRANSFER: ", stopAndWait.bit)
+
     stopAndWait.recv_file(file, serverAddress)
 
     file.close()
