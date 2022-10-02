@@ -119,6 +119,9 @@ def start_server():
     port = args.port
     dirpath = args.storage
 
+    if dirpath[-1] != '/':
+        dirpath +=  '/'
+
     logging.debug(f"Host IP address: {host}")
     logging.debug(f"Host port: {port}")
     logging.debug(f"Directory path: {dirpath}")

@@ -16,7 +16,6 @@ def handle_upload_request(clientAddress,
     # Send filename received ACK.
     transfer_protocol.transferMethod.sendMessage(lastBit, ACK.encode(), clientAddress)
     logging.debug(f"{ACK} filename received sent to client {clientAddress}")
-
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist
     # or truncates the file if it exists.
