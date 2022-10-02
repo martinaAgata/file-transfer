@@ -1,12 +1,14 @@
+SEND FILE
+
 1) Llenamos la cola
 
 ```python
-base = 0
-seqNum = 0
+base = 1
+seqNum = 1
 timer = RepeatingTimer(timeout, func)
 timer.start()
 
-while seqNum < windowSize [5]:
+while seqNum <= windowSize [5]:
 	data = file.read(BUFSIZE)
 	transferMethod.sendMessage(seqNum, data, address)
 	queue.put((seqNum, data))
@@ -23,7 +25,7 @@ while seqNum < windowSize [5]:
 		
 		if base <= bitACK:
 			timer.cancel()
-			while base < bitACK + 1:
+			while base <= bitACK:
 				
 				queue.get()
 				data = file.read(BUFSIZE)
@@ -40,5 +42,20 @@ while seqNum < windowSize [5]:
 		
 ====================================================
 
+RECV FILE
 
+lastSeqNum = 0
+
+message = transferMethod.recvMessage()
+
+while message.type == DATA:
+	
+	if message.bit == lastSeqNum + 1:
+		file.write(message.data)
+		lastSeqNum = message.bit
+
+	transferMethod.sendMessage(lastSeqNum, ACK.encode(), address)
+		
+		
+	message = transferMethod.recvMessage()
 	
