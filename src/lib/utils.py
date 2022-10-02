@@ -16,7 +16,7 @@ def handle_upload_request(clientAddress,
     # Send filename received ACK.
     transfer_protocol.transferMethod.sendMessage(1, ACK.encode(), clientAddress)
     logging.debug(f"{ACK} filename received sent to client {clientAddress}")
-    
+
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist
     # or truncates the file if it exists.
@@ -59,7 +59,7 @@ def handle_download_request(clientAddress,
 
 def handle_action(address, transfer_protocol, dirpath):
     try:
-        action = transfer_protocol.receive()
+        action = transfer_protocol.transferMethod.recvMessage(TIMEOUT)
         if action.type == UPLOAD:
             handle_upload_request(address, transfer_protocol, dirpath, action.data, transfer_protocol.bit)
         elif action.type == DOWNLOAD:
@@ -69,8 +69,7 @@ def handle_action(address, transfer_protocol, dirpath):
                 f"Received an invalid command from client {address}")
     except Exception as err:
         logging.error(f"An error occurred when receiving command: {format(err)}")
-        transfer_protocol.alternateBit()
-        transfer_protocol.transferMethod.sendMessage(transfer_protocol.bit, FIN.encode(), address)
+        transfer_protocol.transferMethod.sendMessage(1, FIN.encode(), address)
 
 
 def is_ack(message):
