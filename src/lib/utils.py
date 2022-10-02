@@ -14,15 +14,16 @@ def handle_upload_request(clientAddress,
     logging.info("Handling upload request")
 
     # Send filename received ACK.
-    transfer_protocol.transferMethod.sendMessage(lastBit, ACK.encode(), clientAddress)
+    transfer_protocol.transferMethod.sendMessage(1, ACK.encode(), clientAddress)
     logging.debug(f"{ACK} filename received sent to client {clientAddress}")
+    
     # Create new file where to put the content of the file to receive.
     # Opens a file for writing. Creates a new file if it does not exist
     # or truncates the file if it exists.
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is at {dirpath}{filename}")
 
-    transfer_protocol.recv_file(file, clientAddress, lastSentMsg=ACK.encode(), lastRcvBit=lastBit)
+    transfer_protocol.recv_file(file, clientAddress, lastSentMsg=ACK.encode(), lastRcvBit=transfer_protocol.bit)
 
     file.close()
 
@@ -37,14 +38,14 @@ def handle_download_request(clientAddress,
     if not os.path.exists(dirpath + filename):
         logging.error(f"File does not exist: {dirpath}/{filename}")
         # Send filename does not exist NAK.
-        transfer_protocol.transferMethod.sendMessage(lastBit, FIN.encode(), clientAddress)
+        transfer_protocol.transferMethod.sendMessage(1, FIN.encode(), clientAddress)
         logging.debug(
             f"Sending {FIN} File does not exist to client {clientAddress}")
         return
 
     # Send filename received ACK.
-    transfer_protocol.transferMethod.sendMessage(lastBit, ACK.encode(), clientAddress)
-    transfer_protocol.alternateBit()
+    transfer_protocol.transferMethod.sendMessage(1, ACK.encode(), clientAddress)
+
     logging.debug(
         f"{ACK} Filename received sent to client {clientAddress}")
 

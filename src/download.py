@@ -24,25 +24,26 @@ def handle_download_request(clientSocket, serverAddress):
     transferMethod = OnlySocketTransferMethod(clientSocket)
     stopAndWait = StopAndWait(transferMethod)
 
+    # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
-    transferMethod.sendMessage(stopAndWait.bit, downloadCmd, serverAddress)
+    transferMethod.sendMessage(1, downloadCmd, serverAddress)
 
+    # Recv ACK
     try:
-        message = stopAndWait.receive(serverAddress, lastSentMsg=downloadCmd,
-                                                          lastSentBit=stopAndWait.bit, timeout=TIMEOUT)
+        message = transferMethod.recvMessage(TIMEOUT)
     except Exception:
         logging.error(
-            f"Timeout while waiting for ACK.")
+            f"Timeout while waiting for filename ACK.")
         return
 
     if message.type != ACK:
         if message.type == FIN:
             logging.info(f"{FIN} messsage received from {serverAddress}.")
-            transferMethod.sendMessage(stopAndWait.bit, FIN_ACK.encode(), serverAddress)
+            transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
             logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
         else:
             logging.error(f"Unknown message received: {message.type}, from {serverAddress}")
-            transferMethod.sendMessage(stopAndWait.bit, FIN.encode(), serverAddress)
+            transferMethod.sendMessage(1, FIN.encode(), serverAddress)
             logging.info(f"{FIN} messsage sent to {serverAddress}.")
         logging.error("File transfer NOT started")
         return
@@ -51,7 +52,8 @@ def handle_download_request(clientSocket, serverAddress):
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
-
+    stopAndWait.alternateBit()
+    print("BIT DEL TRANSFER: ", stopAndWait.bit)
     stopAndWait.recv_file(file, serverAddress)
 
     file.close()
