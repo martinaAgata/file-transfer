@@ -8,7 +8,6 @@ from lib.definitions import (BUFSIZE, FIN, ACK, DOWNLOAD,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_DOWNLOAD_FILEPATH)
-from lib.utils import send_filename
 from lib.StopAndWait import StopAndWait
 from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
@@ -22,7 +21,6 @@ def handle_download_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
-    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
@@ -53,6 +51,7 @@ def handle_download_request(clientSocket, serverAddress):
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
 
+    stopAndWait = StopAndWait(transferMethod)
     stopAndWait.recv_file(file, serverAddress)
 
     file.close()

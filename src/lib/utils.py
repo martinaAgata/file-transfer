@@ -71,34 +71,3 @@ def handle_action(address, transfer_protocol, dirpath):
         logging.error(f"An error occurred when receiving command: {format(err)}")
         transfer_protocol.transferMethod.sendMessage(1, FIN.encode(), address)
 
-
-def is_ack(message):
-    """
-    Splits message into [ACK | NAK] + data
-    """
-    splited_message = message.decode().split(" ", 1)
-    status = splited_message[0]
-
-    response = ''
-    if len(splited_message) == 2:
-        response = splited_message[1]
-
-    if status == ACK:
-        return (True, response)
-    elif status == NAK:
-        return (False, response)
-    else:
-        return (False, "Unknown acknowledge: " + message.decode())
-
-
-def send_filename(clientSocket, action, serverIP, port, filename):
-    clientSocket.sendto((action + ' ' + filename).encode(),
-                        (serverIP, port))
-    logging.debug("Command and filename sent to server")
-    message, _ = clientSocket.recvfrom(BUFSIZE)
-
-    (ack, response) = is_ack(message)
-
-    if not ack:
-        raise NameError(response)
-    logging.debug(f"{ACK} for first message received from server")

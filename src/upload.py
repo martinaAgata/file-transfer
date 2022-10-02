@@ -8,7 +8,6 @@ from lib.definitions import (BUFSIZE, ACK, FIN, UPLOAD, FIN_ACK,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_UPLOAD_FILEPATH,
                              TIMEOUT)
-from lib.utils import send_filename, is_ack
 from lib.StopAndWait import StopAndWait
 from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
@@ -24,7 +23,6 @@ def handle_upload_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
-    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
@@ -53,6 +51,7 @@ def handle_upload_request(clientSocket, serverAddress):
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
     
+    stopAndWait = StopAndWait(transferMethod)
     stopAndWait.send_file(file, serverAddress, TIMEOUT)
 
     file.close()
