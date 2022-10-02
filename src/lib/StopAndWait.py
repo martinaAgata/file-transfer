@@ -51,6 +51,10 @@ class StopAndWait:
         return message
 
     def send_file(self, file, address, timeout):
+
+        # StopAndWait initialize bit in 0. We alternate it to 1 so the receiver maintains its bit in 0, so
+        # receiver do not interpretate it as duplicate. It is hard to explain :(
+        self.alternateBit()
         try:
             data = file.read(BUFSIZE)
 

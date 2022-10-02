@@ -8,7 +8,6 @@ from lib.definitions import (BUFSIZE, ACK, FIN, UPLOAD, FIN_ACK,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_UPLOAD_FILEPATH,
                              TIMEOUT)
-from lib.utils import send_filename, is_ack
 from lib.StopAndWait import StopAndWait
 from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
@@ -24,24 +23,26 @@ def handle_upload_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
-    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
-    transferMethod.sendMessage(stopAndWait.bit, uploadCmd, serverAddress)
+    transferMethod.sendMessage(1, uploadCmd, serverAddress)
 
     # Recv ACK
-    message = stopAndWait.receive(serverAddress, lastSentMsg=uploadCmd, lastSentBit=stopAndWait.bit, timeout=TIMEOUT)
-    stopAndWait.alternateBit()
+    try:
+        message = transferMethod.recvMessage(TIMEOUT)
+    except Exception:
+        logging.error(f"Timeout while waiting for filename ACK.")
+        return
 
     if message.type != ACK:
         if message.type == FIN:
             logging.info(f"{FIN} messsage received from {serverAddress}.")
-            transferMethod.sendMessage(stopAndWait.bit, FIN_ACK.encode(), serverAddress)
+            transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
             logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
         else:
             logging.error(f"Unknown message received: {message.type}, from {serverAddress}")
-            transferMethod.sendMessage(stopAndWait.bit, FIN.encode(), serverAddress)
+            transferMethod.sendMessage(1, FIN.encode(), serverAddress)
             logging.info(f"{FIN} messsage sent to {serverAddress}.")
         logging.error("File transfer NOT started")
         return
@@ -49,7 +50,8 @@ def handle_upload_request(clientSocket, serverAddress):
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
-
+    
+    stopAndWait = StopAndWait(transferMethod)
     stopAndWait.send_file(file, serverAddress, TIMEOUT)
 
     file.close()
