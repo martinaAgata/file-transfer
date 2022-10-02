@@ -16,7 +16,7 @@ class GoBackN:
     def send_file(self, file, address, timeout):
         data = file.read(BUFSIZE)
 
-        while data:
+        while data or not self.sentPkgsWithoutACK.empty():
             logging.debug("Read data from file")
 
             # Si tengo espacio en la ventana para enviar datos, envio de a 1 paquete por iter
@@ -31,6 +31,7 @@ class GoBackN:
                     timer.start()
                 # ya envie el pkg, envío el siguiente si está dentro de la ventana    
                 nextseqnum += 1
+                data = file.read(BUFSIZE)
 
         
             try:
@@ -50,20 +51,21 @@ class GoBackN:
                     return
                 
                 # revisar nextSeqNum y actualizar en base a lo que llegó
-                # sentPkgsWithoutACK.get()
-                # if base == nextseqnum:
-                #   timer.stop()
+                self.base = message.bit + 1
+                for _ in range(self.base, message.bit):
+                    self.sentPkgsWithoutACK.get()
+                    
+                if self.base == self.nextSeqNumber:
+                  timer.stop()
                     
 
-            except BaseException as e:
-                raise e
             except Exception as e:
                 logging.debug(f"Timeout from server {e}")
         
 
 
             logging.debug(f"{ACK} received from server")
-            data = file.read(BUFSIZE)
+            
 
         # Inform the server that the download is finished
         self.transferMethod.sendMessage(self.nextSeqNumber, FIN.encode(), address)
