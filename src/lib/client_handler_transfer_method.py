@@ -7,6 +7,8 @@ class ClientHandlerTransferMethod:
         self.messageQueue = messageQueue
 
     def recvMessage(self, timeout):
+        if timeout == 0:
+            return self.messageQueue.get_nowait()
         return self.messageQueue.get(timeout=timeout)
 
     def sendMessage(self, bit, data, address):
