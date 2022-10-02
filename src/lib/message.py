@@ -27,9 +27,10 @@ class Message:
     """
     Document me please!
     """
-    def __init__(self, encodedMessage, clientAddress):
+    def __init__(self, encodedMessage, clientAddress, bit):
         """
         Document me please!
         """
         self.type, self.data = retrieveMessageAttributes(encodedMessage)
         self.clientAddress = clientAddress
+        self.bit = bit

@@ -2,6 +2,8 @@ import threading as thr
 import queue
 from .definitions import TIMEOUT
 from .utils import handle_action
+from .StopAndWait import StopAndWait
+from .client_handler_transfer_method import ClientHandlerTransferMethod
 
 
 class ClientHandler:
@@ -13,11 +15,13 @@ class ClientHandler:
         Creates a Client Handler and initializes its initial attributes.
         """
         self.queue = queue.Queue()
+
         self.address = address
         self.socket = socket
+        transfer_protocol = StopAndWait(ClientHandlerTransferMethod(self.socket, self.queue))
         self.thread = thr.Thread(
             target=handle_action,
-            args=(address, socket, self.queue, dirpath))
+            args=(address, transfer_protocol, dirpath))
 
     def start_thread(self):
         """

@@ -3,12 +3,13 @@ import logging
 import os
 import sys
 from socket import socket, AF_INET, SOCK_DGRAM
+from lib.StopAndWait import StopAndWait
 from lib.client_handler import ClientHandler
 from lib.message import Message
 from lib.definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
-
+from lib.UDPHandler import recv
 
 def listen(serverSocket, dirpath):
     logging.info("Socket created and listening for requests")
@@ -19,14 +20,15 @@ def listen(serverSocket, dirpath):
     while True:
         try:
             # Receive filepath first.
-            firstMessage, clientAddress = serverSocket.recvfrom(BUFSIZE)
+            bit, firstMessage, clientAddress = recv(serverSocket)
 
-            message = Message(firstMessage, clientAddress)
+            message = Message(firstMessage, clientAddress, bit)
 
             # Get the clientHanlder
             if clientAddress in clientsDict:
                 # OLD CLIENT
                 clientHandler = clientsDict[clientAddress]
+                logging.info(f'Received new message from OLD client: {clientAddress}')
             else:
                 # NEW CLIENT
                 # TODO: maybe check if file exists or NAK
@@ -37,9 +39,11 @@ def listen(serverSocket, dirpath):
                         dirpath)
                     clientHandler.start_thread()
                     clientsDict[clientAddress] = clientHandler
+                    logging.info(f'NEW client has requested something: {clientAddress}')
                 else:
                     # TODO: log me
                     # TODO: send reasons for NAK
+                    logging.info(f"Unknown message received: {message.type}, from {clientAddress}")
                     serverSocket.sendto(NAK.encode(), clientAddress)
                     continue
 
@@ -55,13 +59,15 @@ def listen(serverSocket, dirpath):
             if message.type in [FIN, FIN_ACK]:
                 clientHandler.join()
                 del clientsDict[clientAddress]
+                logging.info(f'Closing client handler: {clientAddress}')
         except KeyboardInterrupt:
             print()
             break
 
     # This code is unreachable until we set ctrl+c signal
-    for (clientAddress, clientHandler) in clientsDict:
-        message = Message("FIN".encode(), clientAddress)
+    for (clientAddress, clientHandler) in clientsDict.items():
+        # TODO: Who defines the bit to send to every client handler????
+        message = Message("FIN".encode(), clientAddress, message.bit)
         clientHandler.send(message)
         clientHandler.join()
 
@@ -112,6 +118,9 @@ def start_server():
     host = args.host
     port = args.port
     dirpath = args.storage
+
+    if dirpath[-1] != '/':
+        dirpath +=  '/'
 
     logging.debug(f"Host IP address: {host}")
     logging.debug(f"Host port: {port}")
