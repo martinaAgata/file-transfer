@@ -10,6 +10,7 @@ from lib.definitions import (FIN, ACK, DOWNLOAD,
                              DEFAULT_DOWNLOAD_FILEPATH)
 from lib.StopAndWait import StopAndWait
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
+from lib.GoBackN import GoBackN
 
 
 def handle_download_request(clientSocket, serverAddress):
@@ -24,11 +25,17 @@ def handle_download_request(clientSocket, serverAddress):
 
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
-    transferMethod.sendMessage(1, downloadCmd, serverAddress)
+
+    # We use stop and wait only in the beginning, just in cause that the ACK from the server get lost.
+    stopAndWait = StopAndWait(transferMethod)
+    transferMethod.sendMessage(stopAndWait.bit, downloadCmd, serverAddress)
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
+        message = stopAndWait.receive(serverAddress,
+                                      lastSentMsg=downloadCmd,
+                                      lastSentBit=stopAndWait.bit,
+                                      timeout=TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")
         return
@@ -52,8 +59,9 @@ def handle_download_request(clientSocket, serverAddress):
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
 
-    stopAndWait = StopAndWait(transferMethod)
-    stopAndWait.recv_file(file, serverAddress)
+    # transferProtocol = StopAndWait(transferMethod)
+    transferProtocol = GoBackN(transferMethod)
+    transferProtocol.recv_file(file, serverAddress)
 
     file.close()
 

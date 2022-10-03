@@ -1,5 +1,7 @@
 import threading as thr
 import queue
+
+from lib.GoBackN import GoBackN
 from .definitions import TIMEOUT
 from .utils import handle_action
 from .StopAndWait import StopAndWait
@@ -18,9 +20,12 @@ class ClientHandler:
 
         self.address = address
         self.socket = socket
-        transfer_protocol = StopAndWait(
+        # transfer_protocol = StopAndWait(
+        #     ClientHandlerTransferMethod(self.socket, self.queue)
+        #     )
+        transfer_protocol = GoBackN(
             ClientHandlerTransferMethod(self.socket, self.queue)
-        )
+            )
         self.thread = thr.Thread(
             target=handle_action,
             args=(address, transfer_protocol, dirpath))

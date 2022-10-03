@@ -1,0 +1,61 @@
+SEND FILE
+
+1) Llenamos la cola
+
+```python
+base = 1
+seqNum = 1
+timer = RepeatingTimer(timeout, func)
+timer.start()
+
+while seqNum <= windowSize [5]:
+	data = file.read(BUFSIZE)
+	transferMethod.sendMessage(seqNum, data, address)
+	queue.put((seqNum, data))
+	seqNum++
+
+```
+
+2) Mientras la cola no este vacia:
+
+	try:
+		message = transferMethod.recvMessage(0)
+		
+		# Chequear que message.type == ACK
+		
+		if base <= bitACK:
+			timer.cancel()
+			while base <= bitACK:
+				
+				queue.get()
+				data = file.read(BUFSIZE)
+				if data:
+					transferMethod.sendMessage(bit, data, address)
+					queue.put((seqNum, data))
+					seqNum++
+				base++
+			timer = RepeatingTimer(timeout, func)
+			timer.start()
+		
+	except:
+		"No hay ACKS en el socket"
+		
+====================================================
+
+RECV FILE
+
+lastSeqNum = 0
+
+message = transferMethod.recvMessage()
+
+while message.type == DATA:
+	
+	if message.bit == lastSeqNum + 1:
+		file.write(message.data)
+		lastSeqNum = message.bit
+
+	transferMethod.sendMessage(lastSeqNum, ACK.encode(), address)
+		
+		
+	message = transferMethod.recvMessage()
+	

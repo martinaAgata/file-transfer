@@ -10,6 +10,7 @@ from lib.definitions import (ACK, FIN, UPLOAD, FIN_ACK,
                              TIMEOUT)
 from lib.StopAndWait import StopAndWait
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
+from lib.GoBackN import GoBackN
 
 
 def handle_upload_request(clientSocket, serverAddress):
@@ -26,6 +27,9 @@ def handle_upload_request(clientSocket, serverAddress):
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
+
+    # We use stop and wait only in the beginning, just in cause that the ACK from the server get lost.
+    stopAndWait = StopAndWait(transferMethod)
     transferMethod.sendMessage(stopAndWait.bit, uploadCmd, serverAddress)
 
     # Recv ACK
@@ -55,8 +59,10 @@ def handle_upload_request(clientSocket, serverAddress):
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
-
-    stopAndWait.send_file(file, serverAddress, TIMEOUT)
+    
+    # transferProtocol = StopAndWait(transferMethod)
+    transferProtocol = GoBackN(transferMethod)
+    transferProtocol.send_file(file, serverAddress, TIMEOUT)
 
     file.close()
 
