@@ -28,7 +28,7 @@ class StopAndWait:
                     # The recv sends another ACK msg, but the sender do nothing
                     if not timeout:
                         self.transferMethod.sendMessage(
-                            lastSentBit, lastSentMsg, address)
+                            message.bit, lastSentMsg, address)
 
                     message = self.transferMethod.recvMessage(timeout)
 

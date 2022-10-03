@@ -8,7 +8,7 @@ DEFAULT_DIRPATH = 'files/'  # TODO: perhaps a CURRENT_DIRPATH is needed
 DEFAULT_LOGGING_LEVEL = logging.INFO
 DEFAULT_DOWNLOAD_FILEPATH = '../downloads/'  # TODO: create if does not exist
 DEFAULT_UPLOAD_FILEPATH = 'lib/resources/'
-TIMEOUT = 2
+TIMEOUT = 0.1
 
 UPLOAD = "upload"
 DOWNLOAD = "download"
@@ -18,5 +18,3 @@ FIN = "FIN"
 FIN_ACK = "FIN_ACK"
 ACTIONS = {UPLOAD, DOWNLOAD, ACK, NAK, FIN, FIN_ACK}
 DATA = "DATA"
-
-TIMEOUT = 4
