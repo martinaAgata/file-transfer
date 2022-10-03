@@ -1,4 +1,4 @@
-from threading import Timer
+from threading import Timer,Event
 
 class RepeatingTimer:
 
@@ -9,10 +9,12 @@ class RepeatingTimer:
         self.kwargs = kwargs
 
         self.timer = None
+        self.stop_events = Event()
 
     def callback(self):
-        self.f(*self.args, **self.kwargs)
-        self.start()
+        if not self.stop_events.is_set():
+            self.f(*self.args, **self.kwargs)
+            self.start()
 
     def cancel(self):
         self.timer.cancel()
@@ -21,5 +23,5 @@ class RepeatingTimer:
         self.timer = Timer(self.interval, self.callback)
         self.timer.start()
 
-    def join(self):
-        self.timer.join()
+    def end(self):
+        self.stop_events.set()

@@ -67,15 +67,14 @@ class GoBackN:
                     self.timer = self.create_timer(address)
                     self.timer.start()
                 
-            except Exception as e:
+            except Exception as e:  # TODO: make it more specific
                 pass
-                # logging.debug(f"No hay ACKS en el socket {e}")
         
         self.transferMethod.sendMessage(self.nextSeqNumber, FIN.encode(), address)
         logging.info(f"{FIN} messsage sent to {address}.")
         logging.info("File transfer completed")
         self.timer.cancel()
-        self.timer.join()
+        self.timer.end()
 
 
     def recv_file(self, file, address, lastSentMsg=None, lastRcvBit=None):
