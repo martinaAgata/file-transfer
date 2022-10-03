@@ -14,7 +14,7 @@ def handle_upload_request(clientAddress,
     logging.info("Handling upload request")
 
     # Send filename received ACK.
-    transfer_protocol.transferMethod.sendMessage(1, ACK.encode(), clientAddress)
+    transfer_protocol.transferMethod.sendMessage(lastBit, ACK.encode(), clientAddress)
     logging.debug(f"{ACK} filename received sent to client {clientAddress}")
 
     # Create new file where to put the content of the file to receive.
@@ -23,7 +23,7 @@ def handle_upload_request(clientAddress,
     file = open(dirpath + filename, 'wb')
     logging.debug(f"File to write in is at {dirpath}{filename}")
 
-    transfer_protocol.recv_file(file, clientAddress, lastSentMsg=ACK.encode(), lastRcvBit=transfer_protocol.bit)
+    transfer_protocol.recv_file(file, clientAddress, lastSentMsg=ACK.encode(), lastRcvBit=lastBit)
 
     file.close()
 
@@ -55,7 +55,6 @@ def handle_download_request(clientAddress,
     transfer_protocol.send_file(file, clientAddress, TIMEOUT)
 
     file.close()
-
 
 def handle_action(address, transfer_protocol, dirpath):
     try:

@@ -1,7 +1,7 @@
 import logging
 from .message import Message
 from .definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
-                          FIN, FIN_ACK, ACK, NAK, TIMEOUT)
+                          FIN, FIN_ACK, ACK, NAK, TIMEOUT, MAX_ALLOWED_TIMEOUTS)
 
 
 class StopAndWait:
@@ -14,8 +14,7 @@ class StopAndWait:
 
     # Returns a Message received (that is not duplicated) from the other part.
     def receive(self, address=None, lastSentMsg=None, lastSentBit=None, lastRcvBit=None, timeout=None):
-        # TODO: change 5 to a constant
-        for _ in range(0, 5):
+        for _ in range(0, MAX_ALLOWED_TIMEOUTS):
             try:
                 # If it is a sender, we set a timeout, if not, recv is blocked until new message
 
@@ -44,7 +43,7 @@ class StopAndWait:
                 self.transferMethod.sendMessage(
                     lastSentBit, lastSentMsg, address)
 
-        # TODO: possible BUG. If a 6th timeout occurrs, then it is NOT catched and the application might close badly
+        # TODO: possible BUG. If a MAX_ALLOWED_TIMEOUTS timeout occurs, then it is NOT catched and the application might close badly
         message = self.transferMethod.recvMessage(timeout)
 
         # If it's the first message, then None is set, so the while condition is always false
@@ -80,7 +79,7 @@ class StopAndWait:
                 # ACK correcto (nos puede llegar un ACK duplicado proveniente
                 # de que le mandamos un duplicado al receiver por un timeout)
                 message = self.receive(
-                    address, lastSentMsg=data, lastSentBit=self.bit, timeout=timeout)
+                    address, lastSentMsg=data, lastSentBit=self.bit, lastRcvBit=1 - self.bit, timeout=timeout)
                 self.alternateBit()
 
                 if message.type != ACK:

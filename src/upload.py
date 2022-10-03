@@ -23,14 +23,16 @@ def handle_upload_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
+    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
-    transferMethod.sendMessage(1, uploadCmd, serverAddress)
+    transferMethod.sendMessage(stopAndWait.bit, uploadCmd, serverAddress)
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
+        message = stopAndWait.receive(serverAddress, lastSentMsg=uploadCmd, lastSentBit=stopAndWait.bit,timeout=TIMEOUT)
+        #message = transferMethod.recvMessage(TIMEOUT)
     except Exception:
         logging.error(f"Timeout while waiting for filename ACK.")
         return
@@ -50,8 +52,8 @@ def handle_upload_request(clientSocket, serverAddress):
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
-    
-    stopAndWait = StopAndWait(transferMethod)
+
+
     stopAndWait.send_file(file, serverAddress, TIMEOUT)
 
     file.close()
