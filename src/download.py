@@ -15,9 +15,12 @@ from lib.utils import get_transfer_protocol, protocol_bit_format
 def handle_download_request(clientSocket, serverAddress):
     logging.info("Handling downloads")
 
-    if not os.path.exists(filepath):
-        logging.error(
-            f"Requested source file {filepath} does not exists")
+    if not os.path.exists(filepath): 
+        logging.info("Created destination dir because it did not exist")
+        os.mkdir(filepath)
+
+    if not os.path.isdir(filepath):        
+        logging.error(f"Requested destination dir {filepath} is not a dir")
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
