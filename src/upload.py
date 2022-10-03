@@ -33,7 +33,7 @@ def handle_upload_request(protocol_bit, clientSocket, serverAddress, filepath, f
     # Recv ACK
     try:
         # message = transferMethod.recvMessage(TIMEOUT)
-        message = recv_or_retry_send(transferMethod, uploadCmd, serverAddress, TIMEOUT)
+        message = recv_or_retry_send(transferMethod, uploadCmd, serverAddress, protocol_bit, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")
         return
@@ -56,7 +56,7 @@ def handle_upload_request(protocol_bit, clientSocket, serverAddress, filepath, f
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
-    
+
     transferProtocol = get_transfer_protocol(protocol_bit, transferMethod)
     transferProtocol.send_file(file, serverAddress, TIMEOUT)
 

@@ -3,18 +3,23 @@ import os
 from lib.GoBackN import GoBackN
 
 from lib.StopAndWait import StopAndWait
-from .definitions import (GBN_BIT, SNW_BIT, UPLOAD, DOWNLOAD, FIN,
-                          ACK, TIMEOUT)
+from .definitions import (GBN_BIT, SNW_BIT, UPLOAD, ACK_ACK,
+                          DOWNLOAD, FIN, ACK, TIMEOUT)
 
-def recv_or_retry_send(transfer_method, last_message, address, timeout=None, retry_times=5):
+
+def recv_or_retry_send(transfer_method, last_message, address,
+                       protocol_bit, timeout=None, retry_times=5):
 
     for i in range(retry_times):
         try:
             return transfer_method.recvMessage(timeout)
         except Exception:
-            logging.debug(f'Timeout while waiting for response from {address}. Sending last message again for {i+1}º time.')
+            logging.debug("Timeout while waiting for response from " +
+                          "{address}. Sending last message again for {i+1}º"
+                          "time.")
             transfer_method.sendMessage(1, last_message, address)
     return transfer_method.recvMessage(timeout)
+
 
 def handle_upload_request(clientAddress,
                           transfer_protocol,
@@ -65,6 +70,16 @@ def handle_download_request(clientAddress,
                                                  ACK.encode(),
                                                  clientAddress)
 
+    # Wait for ACK_ACK, o re-send ACK.
+    # To check client is ready to receive data
+    try:
+        message = recv_or_retry_send(transfer_protocol.mtransferMethod,
+                                     ACK.encode(), clientAddress, 1, TIMEOUT)
+    except Exception:
+        logging.error("Timeout while waiting for filename ACK")
+        return
+    logging.info(f"{ACK_ACK}:{message.data} was received from {clientAddress}")
+
     logging.debug(
         f"{ACK} Filename received sent to client {clientAddress}")
 
@@ -99,13 +114,15 @@ def handle_action(address, transfer_protocol, dirpath):
             f"An error occurred when receiving command: {format(err)}")
         transfer_protocol.transferMethod.sendMessage(1, FIN.encode(), address)
 
+
 def protocol_bit_format(bit):
     if bit == GBN_BIT:
         return "Go-Back-N"
     if bit == SNW_BIT:
         return "Stop & Wait"
-    
+
     return "Unknown"
+
 
 def get_transfer_protocol(bit, transferMethod):
     if bit == GBN_BIT:
@@ -114,6 +131,6 @@ def get_transfer_protocol(bit, transferMethod):
     if bit == SNW_BIT:
         logging.debug(f"Using Stop & Wait protocol")
         return StopAndWait(transferMethod)
-    
+
     logging.info(f"Using Stop & Wait protocol")
     return None
