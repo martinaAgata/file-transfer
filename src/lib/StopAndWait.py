@@ -1,7 +1,6 @@
 import logging
-from .message import Message
-from .definitions import (BUFSIZE, UPLOAD, DOWNLOAD, DATA,
-                          FIN, FIN_ACK, ACK, NAK, TIMEOUT, MAX_ALLOWED_TIMEOUTS)
+from .definitions import (BUFSIZE, DATA, FIN, FIN_ACK,
+                          ACK, MAX_ALLOWED_TIMEOUTS)
 
 
 class StopAndWait:
@@ -13,17 +12,21 @@ class StopAndWait:
         self.bit = 1 - self.bit
 
     # Returns a Message received (that is not duplicated) from the other part.
-    def receive(self, address=None, lastSentMsg=None, lastSentBit=None, lastRcvBit=None, timeout=None):
+    def receive(self, address=None, lastSentMsg=None, lastSentBit=None,
+                lastRcvBit=None, timeout=None):
         for _ in range(0, MAX_ALLOWED_TIMEOUTS):
             try:
-                # If it is a sender, we set a timeout, if not, recv is blocked until new message
+                # If it is a sender, we set a timeout
+                # if not, recv is blocked until new message
 
                 message = self.transferMethod.recvMessage(timeout)
 
-                # If it's the first message, then None is set, so the while condition is always false
+                # If it's the first message, then None is set,
+                # so the while condition is always false
                 while lastRcvBit == message.bit:
                     logging.debug(
-                        f"Duplicated package with bit = {message.bit} and {message.data[:15]}")
+                        f"Duplicated package with bit = {message.bit}"
+                        "and {message.data[:15]}")
                     # The recv sends another ACK msg, but the sender do nothing
                     if not timeout:
                         self.transferMethod.sendMessage(
@@ -32,21 +35,24 @@ class StopAndWait:
                     message = self.transferMethod.recvMessage(timeout)
 
                 logging.debug(
-                    f"Message received from {message.clientAddress} successfully")
+                    f"Message received from {message.clientAddress}"
+                    "successfully")
                 return message
 
             # Message retransmission in case of timeout
             except Exception as err:
-                # When sender throw a timeout exception, we re-send the message, at least until <CONSTANT> times
-                logging.debug(
-                    f"Message queue raise timeout exception while waiting for receiving message: {format(err)}")
+                # When sender throw a timeout exception, we re-send
+                # the message, at least until <CONSTANT> times
+                logging.debug(f"Message queue raise timeout exception while waiting for receiving message: {format(err)}")
                 self.transferMethod.sendMessage(
                     lastSentBit, lastSentMsg, address)
 
-        # TODO: possible BUG. If a MAX_ALLOWED_TIMEOUTS timeout occurs, then it is NOT catched and the application might close badly
+        # TODO: possible BUG. If a MAX_ALLOWED_TIMEOUTS timeout occurs,
+        # then it is NOT catched and the application might close badly
         message = self.transferMethod.recvMessage(timeout)
 
-        # If it's the first message, then None is set, so the while condition is always false
+        # If it's the first message, then None is set, so the while
+        # condition is always false
         while lastRcvBit == message.bit:
             logging.debug(
                 f"Duplicated package with bit = {message.bit} and {message.data[:15]}")
@@ -63,8 +69,10 @@ class StopAndWait:
 
     def send_file(self, file, address, timeout):
 
-        # StopAndWait initialize bit in 0. We alternate it to 1 so the receiver maintains its bit in 0, so
-        # receiver do not interpretate it as duplicate. It is hard to explain :(
+        # StopAndWait initialize bit in 0. We alternate it to 1 so
+        # the receiver maintains its bit in 0, so
+        # receiver do not interpretate it as duplicate.
+        # It is hard to explain :(
         self.alternateBit()
         try:
             data = file.read(BUFSIZE)
@@ -75,11 +83,13 @@ class StopAndWait:
                 self.transferMethod.sendMessage(self.bit, data, address)
                 logging.debug(f"Sent data to {address}")
 
-                # TODO: BUG no deberíamos pasarle al receive el lastRecvBit acá? porque así esperamos el
-                # ACK correcto (nos puede llegar un ACK duplicado proveniente
-                # de que le mandamos un duplicado al receiver por un timeout)
+                # TODO: BUG no deberíamos pasarle al receive el lastRecvBit
+                # acá? porque así esperamos el ACK correcto (nos puede llegar
+                # un ACK duplicado proveniente de que le mandamos un duplicado
+                # al receiver por un timeout)
                 message = self.receive(
-                    address, lastSentMsg=data, lastSentBit=self.bit, lastRcvBit=1 - self.bit, timeout=timeout)
+                    address, lastSentMsg=data, lastSentBit=self.bit,
+                    lastRcvBit=1 - self.bit, timeout=timeout)
                 self.alternateBit()
 
                 if message.type != ACK:
@@ -100,7 +110,8 @@ class StopAndWait:
 
                 data = file.read(BUFSIZE)
 
-            # TODO: FIX THIS BUG! Think about what we have to do if END is never received
+            # TODO: FIX THIS BUG! Think about what we have to do if
+            # END is never received
 
             self.transferMethod.sendMessage(self.bit, FIN.encode(), address)
             logging.info(f"{FIN} messsage sent to {address}.")
@@ -130,7 +141,8 @@ class StopAndWait:
             self.transferMethod.sendMessage(
                 message.bit, raw_message_to_send, message.clientAddress)
             logging.debug(f"{ACK} sent to {message.clientAddress}")
-            message = self.receive(message.clientAddress, lastSentMsg=raw_message_to_send,
+            message = self.receive(message.clientAddress,
+                                   lastSentMsg=raw_message_to_send,
                                    lastRcvBit=message.bit)
 
         if message.type == FIN:

@@ -8,7 +8,7 @@ from .client_handler_transfer_method import ClientHandlerTransferMethod
 
 class ClientHandler:
     """
-    Document me please!
+    Client thread interface
     """
     def __init__(self, address, socket, dirpath):
         """
@@ -18,7 +18,9 @@ class ClientHandler:
 
         self.address = address
         self.socket = socket
-        transfer_protocol = StopAndWait(ClientHandlerTransferMethod(self.socket, self.queue))
+        transfer_protocol = StopAndWait(
+            ClientHandlerTransferMethod(self.socket, self.queue)
+        )
         self.thread = thr.Thread(
             target=handle_action,
             args=(address, transfer_protocol, dirpath))
