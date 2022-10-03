@@ -20,3 +20,6 @@ class RepeatingTimer:
     def start(self):
         self.timer = Timer(self.interval, self.callback)
         self.timer.start()
+
+    def join(self):
+        self.timer.join()

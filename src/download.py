@@ -25,14 +25,19 @@ def handle_download_request(clientSocket, serverAddress):
 
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
-    transferMethod.sendMessage(1, downloadCmd, serverAddress)
+
+    # We use stop and wait only in the beginning, just in cause that the ACK from the server get lost.
+    stopAndWait = StopAndWait(transferMethod)
+    transferMethod.sendMessage(stopAndWait.bit, downloadCmd, serverAddress)
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
+        message = stopAndWait.receive(serverAddress,
+                                      lastSentMsg=downloadCmd,
+                                      lastSentBit=stopAndWait.bit,
+                                      timeout=TIMEOUT)
     except Exception:
-        logging.error(
-            f"Timeout while waiting for filename ACK.")
+        logging.error("Timeout while waiting for filename ACK.")
         return
 
     if message.type != ACK:

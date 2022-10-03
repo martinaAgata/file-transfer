@@ -2,9 +2,10 @@ import logging
 import queue
 from .timer import RepeatingTimer
 from .definitions import (BUFSIZE, GBN_BASE_PACKAGE_TIMEOUT, UPLOAD, DOWNLOAD, DATA,
-                          FIN, FIN_ACK, ACK, NAK, TIMEOUT)
+                          FIN, FIN_ACK, ACK, NAK, TIMEOUT, GBN_RECEIVER_TIMEOUT)
 
 def sendWindow(transferMethod, q, address):
+    logging.debug("Timeout event occurred. Sending all packages from the queue.")
     for (bit, data) in list(q.queue):
         transferMethod.sendMessage(bit, data, address)
 
@@ -19,7 +20,7 @@ class GoBackN:
         self.bit = 1
 
     def create_timer(self, address):
-        return RepeatingTimer(4, sendWindow, self.transferMethod, self.sentPkgsWithoutACK, address)
+        return RepeatingTimer(GBN_BASE_PACKAGE_TIMEOUT, sendWindow, self.transferMethod, self.sentPkgsWithoutACK, address)
 
     def send_file(self, file, address, timeout):
         
@@ -38,7 +39,7 @@ class GoBackN:
         while not self.sentPkgsWithoutACK.empty():
             try:
                 message = self.transferMethod.recvMessage(0)
-                logging.debug(f"base={self.base} bit={message.bit} type={message.type}")
+                logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
 
                 if message.type != ACK:
                     if message.type == FIN:
@@ -53,6 +54,7 @@ class GoBackN:
                     return
                 
                 if self.base <= message.bit:
+                    logging.debug(f"Restarting timer")
                     self.timer.cancel()
                     while self.base <= message.bit:
                         self.sentPkgsWithoutACK.get()
@@ -73,23 +75,24 @@ class GoBackN:
         logging.info(f"{FIN} messsage sent to {address}.")
         logging.info("File transfer completed")
         self.timer.cancel()
+        self.timer.join()
 
 
     def recv_file(self, file, address, lastSentMsg=None, lastRcvBit=None):
         lastSeqNum = 0
 
-        message = self.transferMethod.recvMessage(timeout=15)
+        message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
+        logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
 
         while message.type == DATA:
-            
             if message.bit == lastSeqNum + 1:
                 file.write(message.data)
                 lastSeqNum = message.bit
 
             self.transferMethod.sendMessage(lastSeqNum, ACK.encode(), address)
-                
-                
-            message = self.transferMethod.recvMessage(timeout=15)
+
+            message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
+            logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
         
         if message.type == FIN:
             logging.info(f"{FIN} messsage received from {message.clientAddress}.")
