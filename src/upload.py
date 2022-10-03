@@ -12,7 +12,7 @@ from lib.only_socket_transfer_method import OnlySocketTransferMethod
 from lib.utils import get_transfer_protocol, protocol_bit_format
 
 
-def handle_upload_request(protocol_bit, clientSocket, serverAddress):
+def handle_upload_request(protocol_bit, clientSocket, serverAddress, filepath, filename):
     logging.info("Handling upload")
 
     # Check that file exists
@@ -125,13 +125,9 @@ def start_client():
     logging.info("Initializing upload client")
     logging.debug("Arguments parsed")
 
-    global serverIP
     serverIP = args.host
-    global port
     port = args.port
-    global filepath
     filepath = args.src
-    global filename
     filename = args.name
     protocol = args.protocol
 
@@ -147,7 +143,7 @@ def start_client():
     clientSocket = socket(AF_INET, SOCK_DGRAM)
     serverAddress = (serverIP, port)
 
-    handle_upload_request(protocol, clientSocket, serverAddress)
+    handle_upload_request(protocol, clientSocket, serverAddress, filepath, filename)
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")
