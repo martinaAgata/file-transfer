@@ -12,7 +12,7 @@ def handle_upload_request(clientAddress,
     logging.info("Handling upload request")
 
     # Send filename received ACK.
-    transfer_protocol.transferMethod.sendMessage(lastBit,
+    transfer_protocol.transferMethod.sendMessage(1,
                                                  ACK.encode(),
                                                  clientAddress)
     logging.debug(f"{ACK} filename received sent to client {clientAddress}")
@@ -39,7 +39,7 @@ def handle_download_request(clientAddress,
     logging.info("Handling download request")
 
     if not os.path.exists(dirpath + filename):
-        logging.error(f"File does not exist: {dirpath}/{filename}")
+        logging.error(f"File does not exist: {dirpath}{filename}")
         # Send filename does not exist NAK.
         transfer_protocol.transferMethod.sendMessage(1,
                                                      FIN.encode(),
@@ -57,7 +57,7 @@ def handle_download_request(clientAddress,
         f"{ACK} Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
-    logging.debug(f"File to read from is {dirpath}/{filename}")
+    logging.debug(f"File to read from is {dirpath}{filename}")
 
     transfer_protocol.send_file(file, clientAddress, TIMEOUT)
 

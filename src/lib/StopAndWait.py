@@ -36,16 +36,15 @@ class StopAndWait:
 
                 logging.debug(
                     f"Message received from {message.clientAddress}"
-                    "successfully")
+                    " successfully")
                 return message
 
             # Message retransmission in case of timeout
             except Exception as err:
-                # When sender throw a timeout exception, we re-send
+                # When sender throws a timeout exception, we re-send
                 # the message, at least until <CONSTANT> times
-                logging.debug(f"Message queue raise timeout exception while waiting for receiving message: {format(err)}")
-                self.transferMethod.sendMessage(
-                    lastSentBit, lastSentMsg, address)
+                logging.debug("Message queue raised timeout exception while waiting for receiving message")
+                self.transferMethod.sendMessage(lastSentBit, lastSentMsg, address)
 
         # TODO: possible BUG. If a MAX_ALLOWED_TIMEOUTS timeout occurs,
         # then it is NOT catched and the application might close badly

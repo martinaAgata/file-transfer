@@ -23,21 +23,15 @@ def handle_upload_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
-    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
 
-    # We use stop and wait only in the beginning, just in cause that the ACK from the server get lost.
-    stopAndWait = StopAndWait(transferMethod)
-    transferMethod.sendMessage(stopAndWait.bit, uploadCmd, serverAddress)
+    transferMethod.sendMessage(1, uploadCmd, serverAddress)
 
     # Recv ACK
     try:
-        message = stopAndWait.receive(serverAddress,
-                                      lastSentMsg=uploadCmd,
-                                      lastSentBit=stopAndWait.bit,
-                                      timeout=TIMEOUT)
+        message = transferMethod.recvMessage(TIMEOUT)
         # message = transferMethod.recvMessage(TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")

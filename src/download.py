@@ -26,31 +26,25 @@ def handle_download_request(clientSocket, serverAddress):
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
 
-    # We use stop and wait only in the beginning, just in cause that the ACK from the server get lost.
-    stopAndWait = StopAndWait(transferMethod)
-    transferMethod.sendMessage(stopAndWait.bit, downloadCmd, serverAddress)
+    transferMethod.sendMessage(1, downloadCmd, serverAddress)
 
     # Recv ACK
     try:
-        message = stopAndWait.receive(serverAddress,
-                                      lastSentMsg=downloadCmd,
-                                      lastSentBit=stopAndWait.bit,
-                                      timeout=TIMEOUT)
+        message = transferMethod.recvMessage(TIMEOUT)
     except Exception:
-        logging.error("Timeout while waiting for filename ACK.")
+        logging.error("Timeout while waiting for filename ACK")
         return
 
     if message.type != ACK:
         if message.type == FIN:
-            logging.info(f"{FIN} messsage received from {serverAddress}.")
+            logging.info(f"{FIN} messsage received from {serverAddress}")
             transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
-            logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
+            logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}")
         else:
             logging.error(
-                f"Unknown message received: {message.type},"
-                "from {serverAddress}")
+                f"Unknown message received: {message.type}:{message.data}, from {serverAddress}")
             transferMethod.sendMessage(1, FIN.encode(), serverAddress)
-            logging.info(f"{FIN} messsage sent to {serverAddress}.")
+            logging.info(f"{FIN} message sent to {serverAddress}")
         logging.error("File transfer NOT started")
         return
 

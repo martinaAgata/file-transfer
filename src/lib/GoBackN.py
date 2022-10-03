@@ -32,6 +32,7 @@ class GoBackN:
             if not data:
                 break
             self.transferMethod.sendMessage(self.nextSeqNumber, data, address)
+            logging.info(f"Packet {self.nextSeqNumber} sent to {address}.")
             self.sentPkgsWithoutACK.put((self.nextSeqNumber, data))
             self.nextSeqNumber += 1
         
@@ -55,26 +56,28 @@ class GoBackN:
                 
                 if self.base <= message.bit:
                     logging.debug(f"Restarting timer")
+                    self.timer.end()
                     self.timer.cancel()
                     while self.base <= message.bit:
                         self.sentPkgsWithoutACK.get()
                         data = file.read(BUFSIZE)
                         if data:
                             self.transferMethod.sendMessage(self.nextSeqNumber, data, address)
+                            logging.info(f"Packet {self.nextSeqNumber} sent to {address}.")
                             self.sentPkgsWithoutACK.put((self.nextSeqNumber, data))
                             self.nextSeqNumber += 1
                         self.base += 1
                     self.timer = self.create_timer(address)
                     self.timer.start()
                 
-            except Exception as e:  # TODO: make it more specific
+            except Exception as e: # TODO: make it more specific
                 pass
         
         self.transferMethod.sendMessage(self.nextSeqNumber, FIN.encode(), address)
-        logging.info(f"{FIN} messsage sent to {address}.")
+        logging.info(f"{FIN} message sent to {address}.")
         logging.info("File transfer completed")
-        self.timer.cancel()
         self.timer.end()
+        self.timer.cancel()
 
 
     def recv_file(self, file, address, lastSentMsg=None, lastRcvBit=None):
