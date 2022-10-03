@@ -6,14 +6,14 @@ from lib.StopAndWait import StopAndWait
 from .definitions import (GBN_BIT, SNW_BIT, UPLOAD, DOWNLOAD, FIN,
                           ACK, TIMEOUT)
 
-def recv_or_retry_send(transfer_method, last_message, address, timeout=None, retry_times=5):
+def recv_or_retry_send(transfer_method, last_message, address, protocol_bit, timeout=None, retry_times=5):
 
     for i in range(retry_times):
         try:
             return transfer_method.recvMessage(timeout)
         except Exception:
             logging.debug(f'Timeout while waiting for response from {address}. Sending last message again for {i+1}º time.')
-            transfer_method.sendMessage(1, last_message, address)
+            transfer_method.sendMessage(protocol_bit, last_message, address)
     return transfer_method.recvMessage(timeout)
 
 def handle_upload_request(clientAddress,
@@ -64,6 +64,12 @@ def handle_download_request(clientAddress,
     transfer_protocol.transferMethod.sendMessage(1,
                                                  ACK.encode(),
                                                  clientAddress)
+
+    # Wait for ACK_ACK, o reenvia ACK de nuevo.
+    # Hacer recv_or_retry_send(transferMethod, ACK.encode(), clientAddress, TIMEOUT).
+    # Esto nos permite saber que el cliente esta listo para que le enviemos data.
+    # Checkear la excepcion.
+    # Podes ignorar el protocol bit (enviale 1, no significa nada)
 
     logging.debug(
         f"{ACK} Filename received sent to client {clientAddress}")

@@ -33,7 +33,7 @@ def handle_upload_request(protocol_bit, clientSocket, serverAddress, filepath, f
     # Recv ACK
     try:
         # message = transferMethod.recvMessage(TIMEOUT)
-        message = recv_or_retry_send(transferMethod, uploadCmd, serverAddress, TIMEOUT)
+        message = recv_or_retry_send(transferMethod, uploadCmd, serverAddress, protocol_bit, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")
         return

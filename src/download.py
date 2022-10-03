@@ -34,13 +34,10 @@ def handle_download_request(protocol_bit, clientSocket, serverAddress, filepath,
     # Recv ACK
     try:
         # message = transferMethod.recvMessage(TIMEOUT)
-        message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress, TIMEOUT)
+        message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress, protocol_bit, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK")
         return
-
-    # Send ACK_ACK
-    
 
     if message.type != ACK:
         if message.type == FIN:
@@ -55,6 +52,10 @@ def handle_download_request(protocol_bit, clientSocket, serverAddress, filepath,
         logging.error("File transfer NOT started")
         return
     
+    # Send ACK_ACK
+    # hacer un transfer.sendMessage de un mensaje llamado ACK_ACK,
+    # lo cual significa que estamos listos para leer un archivo
+
     logging.debug(f"[HANDSHAKE] Received {DOWNLOAD} request ACK for file {filename}")
 
     # Open file for receiving using byte-array option.
