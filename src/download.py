@@ -42,7 +42,7 @@ def handle_download_request(clientSocket, serverAddress):
             logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}")
         else:
             logging.error(
-                f"Unknown message received: {message.type}:{message.data}, from {serverAddress}")
+                f"Unknown message received: {message.type}, from {serverAddress}")
             transferMethod.sendMessage(1, FIN.encode(), serverAddress)
             logging.info(f"{FIN} message sent to {serverAddress}")
         logging.error("File transfer NOT started")
