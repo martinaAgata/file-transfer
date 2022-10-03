@@ -9,7 +9,7 @@ from lib.definitions import (ACK, DEFAULT_UPLOAD_PROTOCOL_BIT, FIN, UPLOAD, FIN_
                              DEFAULT_UPLOAD_FILEPATH,
                              TIMEOUT)
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
-from lib.utils import get_transfer_protocol, protocol_bit_format
+from lib.utils import get_transfer_protocol, protocol_bit_format, recv_or_retry_send
 
 
 def handle_upload_request(clientSocket, serverAddress):
@@ -33,8 +33,8 @@ def handle_upload_request(clientSocket, serverAddress):
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
         # message = transferMethod.recvMessage(TIMEOUT)
+        message = recv_or_retry_send(transferMethod, uploadCmd, serverAddress, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")
         return

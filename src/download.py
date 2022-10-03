@@ -9,8 +9,7 @@ from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK, DOWNLOAD,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_DOWNLOAD_FILEPATH)
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
-from lib.utils import get_transfer_protocol, protocol_bit_format
-
+from lib.utils import get_transfer_protocol, protocol_bit_format, recv_or_retry_send
 
 def handle_download_request(clientSocket, serverAddress):
     logging.info("Handling downloads")
@@ -35,10 +34,14 @@ def handle_download_request(clientSocket, serverAddress):
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
+        # message = transferMethod.recvMessage(TIMEOUT)
+        message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK")
         return
+
+    # Send ACK_ACK
+    
 
     if message.type != ACK:
         if message.type == FIN:

@@ -6,6 +6,15 @@ from lib.StopAndWait import StopAndWait
 from .definitions import (GBN_BIT, SNW_BIT, UPLOAD, DOWNLOAD, FIN,
                           ACK, TIMEOUT)
 
+def recv_or_retry_send(transfer_method, last_message, address, timeout=None, retry_times=5):
+
+    for i in range(retry_times):
+        try:
+            return transfer_method.recvMessage(timeout)
+        except Exception:
+            logging.debug(f'Timeout while waiting for response from {address}. Sending last message again for {i+1}º time.')
+            transfer_method.sendMessage(1, last_message, address)
+    return transfer_method.recvMessage(timeout)
 
 def handle_upload_request(clientAddress,
                           transfer_protocol,
