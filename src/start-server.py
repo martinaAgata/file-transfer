@@ -1,11 +1,15 @@
 import argparse
 import logging
 import os
+import queue
 import sys
 from socket import socket, AF_INET, SOCK_DGRAM
+from lib.GoBackN import GoBackN
+from lib.StopAndWait import StopAndWait
 from lib.client_handler import ClientHandler
+from lib.client_handler_transfer_method import ClientHandlerTransferMethod
 from lib.message import Message
-from lib.definitions import (UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
+from lib.definitions import (GBN_BIT, SNW_BIT, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
 from lib.UDPHandler import recv
@@ -32,9 +36,19 @@ def listen(serverSocket, dirpath):
                     f"Received message from OLD client: {clientAddress}")
             else:
                 # NEW CLIENT
-                # TODO: maybe check if file exists or NAK
+                # TODO: maybe check if file exists or NAK    
                 if message.type in [UPLOAD, DOWNLOAD]:
+                    messageQueue = queue.Queue()
+                    transfer_method = ClientHandlerTransferMethod(serverSocket, messageQueue)
+                    transfer_protocol = None
+                    if message.bit == SNW_BIT:
+                        transfer_protocol = StopAndWait(transfer_method)
+                    elif message.bit == GBN_BIT:
+                        transfer_protocol = GoBackN(transfer_method)
+
                     clientHandler = ClientHandler(
+                        messageQueue,
+                        transfer_protocol,
                         clientAddress,
                         serverSocket,
                         dirpath)

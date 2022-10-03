@@ -1,6 +1,9 @@
 import logging
 import os
-from .definitions import (UPLOAD, DOWNLOAD, FIN,
+from lib.GoBackN import GoBackN
+
+from lib.StopAndWait import StopAndWait
+from .definitions import (GBN_BIT, SNW_BIT, UPLOAD, DOWNLOAD, FIN,
                           ACK, TIMEOUT)
 
 
@@ -86,3 +89,22 @@ def handle_action(address, transfer_protocol, dirpath):
         logging.error(
             f"An error occurred when receiving command: {format(err)}")
         transfer_protocol.transferMethod.sendMessage(1, FIN.encode(), address)
+
+def protocol_bit_format(bit):
+    if bit == GBN_BIT:
+        return "Go-Back-N"
+    if bit == SNW_BIT:
+        return "Stop & Wait"
+    
+    return "Unknown"
+
+def get_transfer_protocol(bit, transferMethod):
+    if bit == GBN_BIT:
+        logging.debug(f"Using Go-Back-N protocol")
+        return GoBackN(transferMethod)
+    if bit == SNW_BIT:
+        logging.debug(f"Using Stop & Wait protocol")
+        return StopAndWait(transferMethod)
+    
+    logging.info(f"Using Stop & Wait protocol")
+    return None
