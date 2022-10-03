@@ -11,6 +11,7 @@ from lib.definitions import (BUFSIZE, ACK, FIN, UPLOAD, FIN_ACK,
 from lib.StopAndWait import StopAndWait
 from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
+from lib.GoBackN import GoBackN
 
 
 def handle_upload_request(clientSocket, serverAddress):
@@ -51,8 +52,9 @@ def handle_upload_request(clientSocket, serverAddress):
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
     
-    stopAndWait = StopAndWait(transferMethod)
-    stopAndWait.send_file(file, serverAddress, TIMEOUT)
+    # transferProtocol = StopAndWait(transferMethod)
+    transferProtocol = GoBackN(transferMethod)
+    transferProtocol.send_file(file, serverAddress, TIMEOUT)
 
     file.close()
 

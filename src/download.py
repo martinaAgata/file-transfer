@@ -11,6 +11,7 @@ from lib.definitions import (BUFSIZE, FIN, ACK, DOWNLOAD,
 from lib.StopAndWait import StopAndWait
 from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
+from lib.GoBackN import GoBackN
 
 def handle_download_request(clientSocket, serverAddress):
     logging.info("Handling downloads")
@@ -51,8 +52,9 @@ def handle_download_request(clientSocket, serverAddress):
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
 
-    stopAndWait = StopAndWait(transferMethod)
-    stopAndWait.recv_file(file, serverAddress)
+    # transferProtocol = StopAndWait(transferMethod)
+    transferProtocol = GoBackN(transferMethod)
+    transferProtocol.recv_file(file, serverAddress)
 
     file.close()
 
