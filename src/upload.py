@@ -2,14 +2,13 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (BUFSIZE, ACK, FIN, UPLOAD, FIN_ACK,
+from lib.definitions import (ACK, FIN, UPLOAD, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_UPLOAD_FILEPATH,
                              TIMEOUT)
 from lib.StopAndWait import StopAndWait
-from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
 from lib.GoBackN import GoBackN
 
@@ -24,6 +23,7 @@ def handle_upload_request(clientSocket, serverAddress):
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
+    stopAndWait = StopAndWait(transferMethod)
 
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
@@ -38,6 +38,7 @@ def handle_upload_request(clientSocket, serverAddress):
                                       lastSentMsg=uploadCmd,
                                       lastSentBit=stopAndWait.bit,
                                       timeout=TIMEOUT)
+        # message = transferMethod.recvMessage(TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK.")
         return
@@ -48,7 +49,8 @@ def handle_upload_request(clientSocket, serverAddress):
             transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
             logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
         else:
-            logging.error(f"Unknown message received: {message.type}, from {serverAddress}")
+            logging.error(f"Unknown message received: {message.type},"
+                          "from {serverAddress}")
             transferMethod.sendMessage(1, FIN.encode(), serverAddress)
             logging.info(f"{FIN} messsage sent to {serverAddress}.")
         logging.error("File transfer NOT started")
@@ -120,7 +122,7 @@ def start_client():
     filename = args.name
 
     if filepath[-1] != '/':
-        filepath +=  '/'
+        filepath += '/'
 
     logging.debug(f"Server IP address: {serverIP}")
     logging.debug(f"Server port: {port}")

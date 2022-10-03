@@ -1,6 +1,6 @@
 from .message import Message
-from .definitions import BUFSIZE
 from .UDPHandler import recv, send
+
 
 class OnlySocketTransferMethod:
 

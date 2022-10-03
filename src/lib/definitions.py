@@ -6,9 +6,10 @@ DEFAULT_SERVER_PORT = 12000
 BUFSIZE = 2048
 DEFAULT_DIRPATH = 'files/'  # TODO: perhaps a CURRENT_DIRPATH is needed
 DEFAULT_LOGGING_LEVEL = logging.INFO
-DEFAULT_DOWNLOAD_FILEPATH = '../downloads/'  # TODO: create if does not exist
+DEFAULT_DOWNLOAD_FILEPATH = 'downloads/'  # TODO: create if does not exist
 DEFAULT_UPLOAD_FILEPATH = 'lib/resources/'
-TIMEOUT = 2
+TIMEOUT = 0.01
+MAX_ALLOWED_TIMEOUTS = 5
 
 UPLOAD = "upload"
 DOWNLOAD = "download"

@@ -2,16 +2,16 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (BUFSIZE, FIN, ACK, DOWNLOAD,
+from lib.definitions import (FIN, ACK, DOWNLOAD,
                              TIMEOUT, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_DOWNLOAD_FILEPATH)
 from lib.StopAndWait import StopAndWait
-from lib.UDPHandler import send
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
 from lib.GoBackN import GoBackN
+
 
 def handle_download_request(clientSocket, serverAddress):
     logging.info("Handling downloads")
@@ -46,7 +46,9 @@ def handle_download_request(clientSocket, serverAddress):
             transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
             logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
         else:
-            logging.error(f"Unknown message received: {message.type}, from {serverAddress}")
+            logging.error(
+                f"Unknown message received: {message.type},"
+                "from {serverAddress}")
             transferMethod.sendMessage(1, FIN.encode(), serverAddress)
             logging.info(f"{FIN} messsage sent to {serverAddress}.")
         logging.error("File transfer NOT started")
@@ -62,7 +64,6 @@ def handle_download_request(clientSocket, serverAddress):
     transferProtocol.recv_file(file, serverAddress)
 
     file.close()
-
 
 
 def parse_arguments():
@@ -120,7 +121,7 @@ def start_client():
     filename = args.name
 
     if filepath[-1] != '/':
-        filepath +=  '/'
+        filepath += '/'
 
     logging.debug(f"Server IP address: {serverIP}")
     logging.debug(f"Server port: {port}")

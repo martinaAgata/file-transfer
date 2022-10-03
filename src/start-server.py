@@ -3,13 +3,13 @@ import logging
 import os
 import sys
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.StopAndWait import StopAndWait
 from lib.client_handler import ClientHandler
 from lib.message import Message
-from lib.definitions import (BUFSIZE, UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
+from lib.definitions import (UPLOAD, DOWNLOAD, NAK, FIN, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL, DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT, DEFAULT_DIRPATH)
 from lib.UDPHandler import recv
+
 
 def listen(serverSocket, dirpath):
     logging.info("Socket created and listening for requests")
@@ -28,7 +28,8 @@ def listen(serverSocket, dirpath):
             if clientAddress in clientsDict:
                 # OLD CLIENT
                 clientHandler = clientsDict[clientAddress]
-                logging.info(f'Received new message from OLD client: {clientAddress}')
+                logging.info(
+                    f"Received message from OLD client: {clientAddress}")
             else:
                 # NEW CLIENT
                 # TODO: maybe check if file exists or NAK
@@ -39,11 +40,14 @@ def listen(serverSocket, dirpath):
                         dirpath)
                     clientHandler.start_thread()
                     clientsDict[clientAddress] = clientHandler
-                    logging.info(f'NEW client has requested something: {clientAddress}')
+                    logging.info(
+                        f"NEW client has requested something: {clientAddress}")
                 else:
                     # TODO: log me
                     # TODO: send reasons for NAK
-                    logging.info(f"Unknown message received: {message.type}, from {clientAddress}")
+                    logging.info(
+                        f"Unknown message received: {message.type},"
+                        "from {clientAddress}")
                     serverSocket.sendto(NAK.encode(), clientAddress)
                     continue
 
@@ -120,7 +124,7 @@ def start_server():
     dirpath = args.storage
 
     if dirpath[-1] != '/':
-        dirpath +=  '/'
+        dirpath += '/'
 
     logging.debug(f"Host IP address: {host}")
     logging.debug(f"Host port: {port}")
