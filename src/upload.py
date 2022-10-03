@@ -2,15 +2,14 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (ACK, FIN, UPLOAD, FIN_ACK,
+from lib.definitions import (ACK, DEFAULT_UPLOAD_PROTOCOL_BIT, FIN, UPLOAD, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_UPLOAD_FILEPATH,
                              TIMEOUT)
-from lib.StopAndWait import StopAndWait
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
-from lib.GoBackN import GoBackN
+from lib.utils import get_transfer_protocol, protocol_bit_format
 
 
 def handle_upload_request(clientSocket, serverAddress):
@@ -27,7 +26,10 @@ def handle_upload_request(clientSocket, serverAddress):
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
 
-    transferMethod.sendMessage(1, uploadCmd, serverAddress)
+    protocol_bit = DEFAULT_UPLOAD_PROTOCOL_BIT
+    transferMethod.sendMessage(protocol_bit, uploadCmd, serverAddress)
+    logging.debug(f"[HANDSHAKE] Sending {UPLOAD} request for file {filename} " + 
+                    f"with {protocol_bit_format(protocol_bit)}")
 
     # Recv ACK
     try:
@@ -54,8 +56,7 @@ def handle_upload_request(clientSocket, serverAddress):
     file = open(filepath + filename, "rb")
     logging.debug(f"File to read from is {filepath}/{filename}")
     
-    # transferProtocol = StopAndWait(transferMethod)
-    transferProtocol = GoBackN(transferMethod)
+    transferProtocol = get_transfer_protocol(protocol_bit, transferMethod)
     transferProtocol.send_file(file, serverAddress, TIMEOUT)
 
     file.close()

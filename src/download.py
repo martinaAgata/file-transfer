@@ -2,23 +2,25 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (FIN, ACK, DOWNLOAD,
+from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK, DOWNLOAD,
                              TIMEOUT, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_DOWNLOAD_FILEPATH)
-from lib.StopAndWait import StopAndWait
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
-from lib.GoBackN import GoBackN
+from lib.utils import get_transfer_protocol, protocol_bit_format
 
 
 def handle_download_request(clientSocket, serverAddress):
     logging.info("Handling downloads")
 
-    if not os.path.exists(filepath):
-        logging.error(
-            f"Requested source file {filepath} does not exists")
+    if not os.path.exists(filepath): 
+        logging.info("Created destination dir because it did not exist")
+        os.mkdir(filepath)
+
+    if not os.path.isdir(filepath):        
+        logging.error(f"Requested destination dir {filepath} is not a dir")
         return
 
     transferMethod = OnlySocketTransferMethod(clientSocket)
@@ -26,7 +28,10 @@ def handle_download_request(clientSocket, serverAddress):
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
 
-    transferMethod.sendMessage(1, downloadCmd, serverAddress)
+    protocol_bit = DEFAULT_DOWNLOAD_PROTOCOL_BIT
+    transferMethod.sendMessage(protocol_bit, downloadCmd, serverAddress)
+    logging.debug(f"[HANDSHAKE] Sending {DOWNLOAD} request for file {filename} " + 
+                    f"with {protocol_bit_format(protocol_bit)}")
 
     # Recv ACK
     try:
@@ -47,14 +52,15 @@ def handle_download_request(clientSocket, serverAddress):
             logging.info(f"{FIN} message sent to {serverAddress}")
         logging.error("File transfer NOT started")
         return
+    
+    logging.debug(f"[HANDSHAKE] Received {DOWNLOAD} request ACK for file {filename}")
 
     # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
     logging.debug(f"File to write in is {filepath}/{filename}")
 
-    # transferProtocol = StopAndWait(transferMethod)
-    transferProtocol = GoBackN(transferMethod)
+    transferProtocol = get_transfer_protocol(protocol_bit, transferMethod)
     transferProtocol.recv_file(file, serverAddress)
 
     file.close()

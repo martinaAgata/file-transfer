@@ -12,20 +12,14 @@ class ClientHandler:
     """
     Client thread interface
     """
-    def __init__(self, address, socket, dirpath):
+    def __init__(self, messageQueue, transfer_protocol, address, socket, dirpath):
         """
         Creates a Client Handler and initializes its initial attributes.
         """
-        self.queue = queue.Queue()
+        self.queue = messageQueue
 
         self.address = address
         self.socket = socket
-        # transfer_protocol = StopAndWait(
-        #     ClientHandlerTransferMethod(self.socket, self.queue)
-        #     )
-        transfer_protocol = GoBackN(
-            ClientHandlerTransferMethod(self.socket, self.queue)
-            )
         self.thread = thr.Thread(
             target=handle_action,
             args=(address, transfer_protocol, dirpath))
