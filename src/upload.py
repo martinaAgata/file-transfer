@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (ACK, DEFAULT_UPLOAD_PROTOCOL_BIT, FIN, UPLOAD, FIN_ACK,
+from lib.definitions import (ACK, DEFAULT_UPLOAD_PROTOCOL_BIT, FIN, GBN_BIT, SNW_BIT, UPLOAD, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
@@ -12,7 +12,7 @@ from lib.only_socket_transfer_method import OnlySocketTransferMethod
 from lib.utils import get_transfer_protocol, protocol_bit_format
 
 
-def handle_upload_request(clientSocket, serverAddress):
+def handle_upload_request(protocol_bit, clientSocket, serverAddress):
     logging.info("Handling upload")
 
     # Check that file exists
@@ -26,7 +26,6 @@ def handle_upload_request(clientSocket, serverAddress):
     # Send the UPLOAD filename to the client
     uploadCmd = (UPLOAD + ' ' + filename).encode()
 
-    protocol_bit = DEFAULT_UPLOAD_PROTOCOL_BIT
     transferMethod.sendMessage(protocol_bit, uploadCmd, serverAddress)
     logging.debug(f"[HANDSHAKE] Sending {UPLOAD} request for file {filename} " + 
                     f"with {protocol_bit_format(protocol_bit)}")
@@ -51,6 +50,8 @@ def handle_upload_request(clientSocket, serverAddress):
             logging.info(f"{FIN} messsage sent to {serverAddress}.")
         logging.error("File transfer NOT started")
         return
+
+    logging.debug(f"[HANDSHAKE] Received {UPLOAD} request ACK for file {filename}")
 
     # Open file for sending using byte-array option.
     file = open(filepath + filename, "rb")
@@ -97,6 +98,23 @@ def parse_arguments():
                            required=True,
                            metavar='FILENAME')
 
+    gbn_def = snw_def = ""
+    if DEFAULT_UPLOAD_PROTOCOL_BIT == GBN_BIT:
+        gbn_def = "(default)"
+    else:
+        snw_def = "(default)"
+
+    protocols = argParser.add_mutually_exclusive_group()
+    protocols.add_argument('--gbn',
+                           help=f'use Go-Back-N protocol {gbn_def}',
+                           action="store_const",
+                           dest="protocol", const=GBN_BIT,
+                           default=DEFAULT_UPLOAD_PROTOCOL_BIT)
+    protocols.add_argument('--snw',
+                           help=f'use Stop & Wait protocol {snw_def}', action="store_const",
+                           dest="protocol", const=SNW_BIT,
+                           default=DEFAULT_UPLOAD_PROTOCOL_BIT)
+
     return argParser.parse_args()
 
 
@@ -115,6 +133,7 @@ def start_client():
     filepath = args.src
     global filename
     filename = args.name
+    protocol = args.protocol
 
     if filepath[-1] != '/':
         filepath += '/'
@@ -123,11 +142,12 @@ def start_client():
     logging.debug(f"Server port: {port}")
     logging.debug(f"Filepath: {filepath}")
     logging.debug(f"Filename: {filename}")
+    logging.debug(f"Protocol: {protocol_bit_format(protocol)}")
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
     serverAddress = (serverIP, port)
 
-    handle_upload_request(clientSocket, serverAddress)
+    handle_upload_request(protocol, clientSocket, serverAddress)
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")

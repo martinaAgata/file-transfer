@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK, DOWNLOAD,
+from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK, DOWNLOAD, GBN_BIT, SNW_BIT,
                              TIMEOUT, FIN_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
@@ -12,7 +12,7 @@ from lib.only_socket_transfer_method import OnlySocketTransferMethod
 from lib.utils import get_transfer_protocol, protocol_bit_format
 
 
-def handle_download_request(clientSocket, serverAddress):
+def handle_download_request(protocol_bit, clientSocket, serverAddress):
     logging.info("Handling downloads")
 
     if not os.path.exists(filepath): 
@@ -28,7 +28,6 @@ def handle_download_request(clientSocket, serverAddress):
     # Send the UPLOAD filename to the client
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
 
-    protocol_bit = DEFAULT_DOWNLOAD_PROTOCOL_BIT
     transferMethod.sendMessage(protocol_bit, downloadCmd, serverAddress)
     logging.debug(f"[HANDSHAKE] Sending {DOWNLOAD} request for file {filename} " + 
                     f"with {protocol_bit_format(protocol_bit)}")
@@ -68,7 +67,7 @@ def handle_download_request(clientSocket, serverAddress):
 
 def parse_arguments():
     argParser = argparse.ArgumentParser(
-        prog='upload', description='Download a file from a given server')
+        prog='download', description='Download a file from a given server')
 
     group = argParser.add_mutually_exclusive_group()
     group.add_argument('-v', '--verbose',
@@ -100,6 +99,23 @@ def parse_arguments():
                            help='file name',
                            required=True,
                            metavar='FILENAME')
+    
+    gbn_def = snw_def = ""
+    if DEFAULT_DOWNLOAD_PROTOCOL_BIT == GBN_BIT:
+        gbn_def = "(default)"
+    else:
+        snw_def = "(default)"
+
+    protocols = argParser.add_mutually_exclusive_group()
+    protocols.add_argument('--gbn',
+                           help=f'use Go-Back-N protocol {gbn_def}',
+                           action="store_const",
+                           dest="protocol", const=GBN_BIT,
+                           default=DEFAULT_DOWNLOAD_PROTOCOL_BIT)
+    protocols.add_argument('--snw',
+                           help=f'use Stop & Wait protocol {snw_def}', action="store_const",
+                           dest="protocol", const=SNW_BIT,
+                           default=DEFAULT_DOWNLOAD_PROTOCOL_BIT)
 
     return argParser.parse_args()
 
@@ -119,6 +135,7 @@ def start_client():
     filepath = args.dst
     global filename
     filename = args.name
+    protocol = args.protocol
 
     if filepath[-1] != '/':
         filepath += '/'
@@ -127,11 +144,12 @@ def start_client():
     logging.debug(f"Server port: {port}")
     logging.debug(f"Filepath: {filepath}")
     logging.debug(f"Filename: {filename}")
+    logging.debug(f"Protocol: {protocol_bit_format(protocol)}")
 
     clientSocket = socket(AF_INET, SOCK_DGRAM)
     serverAddress = (serverIP, port)
 
-    handle_download_request(clientSocket, serverAddress)
+    handle_download_request(protocol, clientSocket, serverAddress)
 
     clientSocket.close()
     logging.debug(f"Socket {clientSocket} closed")
