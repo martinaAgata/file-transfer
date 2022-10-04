@@ -42,9 +42,9 @@ $ python3 upload.py [-h] [-v | -q] [-H ADDR] [-p PORT] [-s FILEPATH] [-n FILENAM
 
 Opcionales: mismos flags que el comando `start-server` y dos agregados.
 
-`-s`, `--src`: permite indicar el path del archivo origen.
+`-s`, `--src`: permite indicar el path del archivo a cargar.
 
-`-n`, `--name`: permite indicar el nombre del archivo destino.
+`-n`, `--name`: permite indicar el nombre con que se cargará el archivo en el servidor.
 
 #### Descarga
 
