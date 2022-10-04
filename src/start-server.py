@@ -119,7 +119,7 @@ def parse_arguments():
         help='decrease output verbosity',
         action="store_const",
         dest="loglevel",
-        const=logging.CRITICAL,
+        const=logging.ERROR,
         default=DEFAULT_LOGGING_LEVEL,
     )
 
