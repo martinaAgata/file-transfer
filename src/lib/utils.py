@@ -65,13 +65,13 @@ def handle_download_request(clientAddress,
             f"Sending {FIN} File does not exist to client {clientAddress}")
         return
 
-    # # Send filename received ACK.
-    # transfer_protocol.transferMethod.sendMessage(1,
-    #                                              ACK.encode(),
-    #                                              clientAddress)
-    #
-    # logging.debug(
-    #     f"{ACK} Filename received sent to client {clientAddress}")
+    # Send filename received ACK.
+    transfer_protocol.transferMethod.sendMessage(1,
+                                                 ACK.encode(),
+                                                 clientAddress)
+
+    logging.debug(
+        f"{ACK} Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}{filename}")

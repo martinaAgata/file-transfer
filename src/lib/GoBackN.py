@@ -2,7 +2,7 @@ import logging
 import queue
 from .timer import RepeatingTimer
 from .definitions import (BUFSIZE, GBN_BASE_PACKAGE_TIMEOUT, DATA,
-                          FIN, FIN_ACK, ACK, GBN_RECEIVER_TIMEOUT)
+                          FIN, FIN_ACK, ACK, GBN_RECEIVER_TIMEOUT, GBN_WINDOW_SIZE)
 
 
 def sendWindow(transferMethod, q, address):
@@ -15,7 +15,7 @@ class GoBackN:
     def __init__(self, transferMethod):
         self.nextSeqNumber = 1
         self.base = 1
-        self.windowSize = 2
+        self.windowSize = GBN_WINDOW_SIZE
         self.timer = None
         self.sentPkgsWithoutACK = queue.Queue(maxsize=self.windowSize)
         self.transferMethod = transferMethod
@@ -87,7 +87,7 @@ class GoBackN:
 
         try:
             message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
-            logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+            logging.debug(f"seq_num={message.bit} type={message.type}")
         except BaseException:
             logging.info(f"Timeout while waiting for message from {address}")
             return
@@ -101,7 +101,7 @@ class GoBackN:
 
             try:
                 message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
-                logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+                logging.debug(f"seq_num={message.bit} type={message.type}")
             except BaseException:
                 logging.info(f"Timeout while waiting for message from {address}")
                 return
