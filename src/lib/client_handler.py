@@ -1,4 +1,5 @@
 import threading as thr
+import logging
 
 from .definitions import TIMEOUT
 from .utils import handle_action
