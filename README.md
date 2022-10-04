@@ -56,6 +56,6 @@ $ python3 download.py [-h] [-v | -q] [-H ADDR] [-p PORT] [-d FILEPATH] [-n FILEN
 
 Opcionales: mismos flags que el comando `start-server` y dos agregados.
 
-`-d`, `--dst`: permite indicar el path del archivo destino.
+`-d`, `--dst`: permite indicar el path dónde almacenar el archivo a descargar.
 
-`-n`, `--name`: permite indicar el nombre del archivo destino.
+`-n`, `--name`: permite indicar el nombre del archivo a descargar.
