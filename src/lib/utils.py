@@ -17,7 +17,7 @@ def recv_or_retry_send(transfer_method, last_message, address,
             logging.debug(f"Timeout while waiting for response from "
                           f"{address}. Sending last message again for {i+1}º"
                           "time.")
-            transfer_method.sendMessage(1, last_message, address)
+            transfer_method.sendMessage(protocol_bit, last_message, address)
     return transfer_method.recvMessage(timeout)
 
 
