@@ -68,7 +68,8 @@ class GoBackN:
                         logging.debug(f"{FIN_ACK} messsage sent to {address}.")
                     else:
                         logging.error(
-                            f"Unknown message received: {message.data[:15]}, from {address}"
+                            f"Unknown message received: {message.data[:15]},"
+                            + f" from {address}"
                         )
                         self.transferMethod.sendMessage(
                             self.nextSeqNumber, FIN.encode(), address
@@ -139,7 +140,8 @@ class GoBackN:
             logging.info(f"Received file from {message.clientAddress}")
         else:
             logging.error(
-                f"Unknown message received {message.data[:15]} from {message.clientAddress}"
+                f"Unknown message received {message.data[:15]}"
+                + f" from {message.clientAddress}"
             )
             self.transferMethod.sendMessage(
                 message.bit, FIN.encode(), message.clientAddress

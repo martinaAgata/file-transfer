@@ -31,7 +31,7 @@ class StopAndWait:
                 while lastRcvBit == message.bit:
                     logging.debug(
                         f"Duplicated package with bit = {message.bit}"
-                        "and {message.data[:15]}"
+                        f"and {message.data[:15]}"
                     )
                     # The recv sends another ACK msg, but the sender do nothing
                     if not timeout:
@@ -51,7 +51,8 @@ class StopAndWait:
                 # When sender throws a timeout exception, we re-send
                 # the message, at least until <CONSTANT> times
                 logging.debug(
-                    "Message queue raised timeout exception while waiting for receiving message"
+                    "Message queue raised timeout exception while waiting"
+                    + " for receiving message"
                 )
                 self.transferMethod.sendMessage(lastSentBit, lastSentMsg, address)
 
@@ -112,7 +113,8 @@ class StopAndWait:
                         logging.debug(f"{FIN_ACK} messsage sent to {address}.")
                     else:
                         logging.error(
-                            f"Unknown message received: {message.data[:15]}, from {address}"
+                            f"Unknown message received: {message.data[:15]},"
+                            + f" from {address}"
                         )
                         self.transferMethod.sendMessage(self.bit, FIN.encode(), address)
                         logging.info(f"{FIN} messsage sent to {address}.")
@@ -173,7 +175,8 @@ class StopAndWait:
             logging.info(f"Received file from {message.clientAddress}")
         else:
             logging.error(
-                f"Unknown message received {message.data[:15]} from {message.clientAddress}"
+                f"Unknown message received {message.data[:15]}"
+                + f" from {message.clientAddress}"
             )
             self.transferMethod.sendMessage(
                 message.bit, FIN.encode(), message.clientAddress
