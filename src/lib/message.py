@@ -1,7 +1,6 @@
 from .definitions import ACTIONS, DATA
 
 
-# TODO: check if should be moved to some utils file.
 def retrieveMessageAttributes(message):
     """
     Returns a tuple with type and data retrieved from the message

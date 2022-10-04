@@ -53,15 +53,15 @@ def handle_upload_request(
 
     if message.type != ACK:
         if message.type == FIN:
-            logging.info(f"{FIN} messsage received from {serverAddress}.")
+            logging.info(f"{FIN} message received from {serverAddress}.")
             transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
-            logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}.")
+            logging.debug(f"{FIN_ACK} message sent to {serverAddress}.")
         else:
             logging.error(
                 f"Unknown message received: {message.type}," "from {serverAddress}"
             )
             transferMethod.sendMessage(1, FIN.encode(), serverAddress)
-            logging.info(f"{FIN} messsage sent to {serverAddress}.")
+            logging.info(f"{FIN} message sent to {serverAddress}.")
         logging.error("File transfer NOT started")
         return
 

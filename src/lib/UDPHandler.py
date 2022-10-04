@@ -4,8 +4,6 @@ import struct
 from .definitions import BUFSIZE
 
 
-# TODO: Do we need to use this?
-# We can write that no package is corrupt in hypothesis
 def checksumCalculator(data):
     checksum = zlib.crc32(data)
     return checksum

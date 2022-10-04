@@ -61,11 +61,11 @@ class GoBackN:
 
                 if message.type != ACK:
                     if message.type == FIN:
-                        logging.info(f"{FIN} messsage received from {address}.")
+                        logging.info(f"{FIN} message received from {address}.")
                         self.transferMethod.sendMessage(
                             self.nextSeqNumber, FIN_ACK.encode(), address
                         )
-                        logging.debug(f"{FIN_ACK} messsage sent to {address}.")
+                        logging.debug(f"{FIN_ACK} message sent to {address}.")
                     else:
                         logging.error(
                             f"Unknown message received: {message.data[:15]},"
@@ -74,7 +74,7 @@ class GoBackN:
                         self.transferMethod.sendMessage(
                             self.nextSeqNumber, FIN.encode(), address
                         )
-                        logging.info(f"{FIN} messsage sent to {address}.")
+                        logging.info(f"{FIN} message sent to {address}.")
                     logging.error("File transfer NOT completed")
                     return
 
@@ -132,11 +132,11 @@ class GoBackN:
                 return
 
         if message.type == FIN:
-            logging.info(f"{FIN} messsage received from {message.clientAddress}.")
+            logging.info(f"{FIN} message received from {message.clientAddress}.")
             self.transferMethod.sendMessage(
                 message.bit, FIN_ACK.encode(), message.clientAddress
             )
-            logging.debug(f"{FIN_ACK} messsage sent to {message.clientAddress}.")
+            logging.debug(f"{FIN_ACK} message sent to {message.clientAddress}.")
             logging.info(f"Received file from {message.clientAddress}")
         else:
             logging.error(
@@ -146,5 +146,5 @@ class GoBackN:
             self.transferMethod.sendMessage(
                 message.bit, FIN.encode(), message.clientAddress
             )
-            logging.debug(f"{FIN} messsage sent to {message.clientAddress}.")
+            logging.debug(f"{FIN} message sent to {message.clientAddress}.")
             logging.info("File transfer NOT completed")

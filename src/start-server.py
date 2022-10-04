@@ -45,7 +45,6 @@ def listen(serverSocket, dirpath):
                 logging.info(f"Received message from OLD client: {clientAddress}")
             else:
                 # NEW CLIENT
-                # TODO: maybe check if file exists or NAK
                 if message.type in [UPLOAD, DOWNLOAD]:
                     messageQueue = queue.Queue()
                     transfer_method = ClientHandlerTransferMethod(
@@ -68,8 +67,6 @@ def listen(serverSocket, dirpath):
                     clientsDict[clientAddress] = clientHandler
                     logging.info(f"NEW client has requested something: {clientAddress}")
                 else:
-                    # TODO: log me
-                    # TODO: send reasons for NAK
                     logging.info(
                         f"Unknown message received: {message.type},"
                         "from {clientAddress}"
@@ -80,10 +77,7 @@ def listen(serverSocket, dirpath):
             # Send the message to the clientHandler
             clientHandler.send(message)
 
-            # TODO: Check that every time that a FIN is send, the thread go to
-            # the end of the scope.
-            #
-            # If FIN -> Join client, and send FIN_ACK
+            # If FIN -> Join client and send FIN_ACK
             # If FIN_ACK -> We've already sent FIN, so just join client
             # In both cases, we must remove clientHandler from clientsDict
             if message.type in [FIN, FIN_ACK]:
@@ -96,7 +90,6 @@ def listen(serverSocket, dirpath):
 
     # This code is unreachable until we set ctrl+c signal
     for (clientAddress, clientHandler) in clientsDict.items():
-        # TODO: Who defines the bit to send to every client handler????
         message = Message("FIN".encode(), clientAddress, message.bit)
         clientHandler.send(message)
         clientHandler.join()

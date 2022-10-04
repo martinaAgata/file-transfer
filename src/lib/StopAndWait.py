@@ -79,8 +79,7 @@ class StopAndWait:
 
         # StopAndWait initialize bit in 0. We alternate it to 1 so
         # the receiver maintains its bit in 0, so
-        # receiver do not interpretate it as duplicate.
-        # It is hard to explain :(
+        # receiver does not interpretate it as duplicate.
         self.alternateBit()
         try:
             data = file.read(BUFSIZE)
@@ -91,10 +90,6 @@ class StopAndWait:
                 self.transferMethod.sendMessage(self.bit, data, address)
                 logging.debug(f"Sent data to {address}")
 
-                # TODO: BUG no deberíamos pasarle al receive el lastRecvBit
-                # acá? porque así esperamos el ACK correcto (nos puede llegar
-                # un ACK duplicado proveniente de que le mandamos un duplicado
-                # al receiver por un timeout)
                 message = self.receive(
                     address,
                     lastSentMsg=data,
@@ -106,28 +101,25 @@ class StopAndWait:
 
                 if message.type != ACK:
                     if message.type == FIN:
-                        logging.info(f"{FIN} messsage received from {address}.")
+                        logging.info(f"{FIN} message received from {address}.")
                         self.transferMethod.sendMessage(
                             self.bit, FIN_ACK.encode(), address
                         )
-                        logging.debug(f"{FIN_ACK} messsage sent to {address}.")
+                        logging.debug(f"{FIN_ACK} message sent to {address}.")
                     else:
                         logging.error(
                             f"Unknown message received: {message.data[:15]},"
                             + f" from {address}"
                         )
                         self.transferMethod.sendMessage(self.bit, FIN.encode(), address)
-                        logging.info(f"{FIN} messsage sent to {address}.")
+                        logging.info(f"{FIN} message sent to {address}.")
                     logging.error("File transfer NOT completed")
                     return
 
                 data = file.read(BUFSIZE)
 
-            # TODO: FIX THIS BUG! Think about what we have to do if
-            # END is never received
-
             self.transferMethod.sendMessage(self.bit, FIN.encode(), address)
-            logging.info(f"{FIN} messsage sent to {address}.")
+            logging.info(f"{FIN} message sent to {address}.")
 
             try:
                 _ = self.receive(
@@ -167,11 +159,11 @@ class StopAndWait:
             )
 
         if message.type == FIN:
-            logging.info(f"{FIN} messsage received from {message.clientAddress}.")
+            logging.info(f"{FIN} message received from {message.clientAddress}.")
             self.transferMethod.sendMessage(
                 message.bit, FIN_ACK.encode(), message.clientAddress
             )
-            logging.debug(f"{FIN_ACK} messsage sent to {message.clientAddress}.")
+            logging.debug(f"{FIN_ACK} message sent to {message.clientAddress}.")
             logging.info(f"Received file from {message.clientAddress}")
         else:
             logging.error(
@@ -181,5 +173,5 @@ class StopAndWait:
             self.transferMethod.sendMessage(
                 message.bit, FIN.encode(), message.clientAddress
             )
-            logging.debug(f"{FIN} messsage sent to {message.clientAddress}.")
+            logging.debug(f"{FIN} message sent to {message.clientAddress}.")
             logging.info("File transfer NOT completed")

@@ -31,7 +31,7 @@ class ClientHandler:
         """
         Inserts message at own queue
         """
-        self.queue.put(message)  # TODO: Full Exception.
+        self.queue.put(message)
 
     def join(self):
         """
