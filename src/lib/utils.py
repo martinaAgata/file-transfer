@@ -14,8 +14,8 @@ def recv_or_retry_send(transfer_method, last_message, address,
         try:
             return transfer_method.recvMessage(timeout)
         except Exception:
-            logging.debug("Timeout while waiting for response from " +
-                          "{address}. Sending last message again for {i+1}º"
+            logging.debug(f"Timeout while waiting for response from "
+                          f"{address}. Sending last message again for {i+1}º"
                           "time.")
             transfer_method.sendMessage(1, last_message, address)
     return transfer_method.recvMessage(timeout)
@@ -73,7 +73,7 @@ def handle_download_request(clientAddress,
     # Wait for ACK_ACK, o re-send ACK.
     # To check client is ready to receive data
     try:
-        message = recv_or_retry_send(transfer_protocol.mtransferMethod,
+        message = recv_or_retry_send(transfer_protocol.transferMethod,
                                      ACK.encode(), clientAddress, 1, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK")
