@@ -2,24 +2,28 @@ import argparse
 import logging
 import os
 from socket import socket, AF_INET, SOCK_DGRAM
-from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK, DOWNLOAD, GBN_BIT, SNW_BIT,
-                             TIMEOUT, FIN_ACK,
+from lib.definitions import (DEFAULT_DOWNLOAD_PROTOCOL_BIT, FIN, ACK,
+                             DOWNLOAD, GBN_BIT, SNW_BIT,
+                             TIMEOUT, FIN_ACK, ACK_ACK,
                              DEFAULT_LOGGING_LEVEL,
                              DEFAULT_SERVER_IP,
                              DEFAULT_SERVER_PORT,
                              DEFAULT_DOWNLOAD_FILEPATH)
 from lib.only_socket_transfer_method import OnlySocketTransferMethod
-from lib.utils import get_transfer_protocol, protocol_bit_format
+from lib.utils import (get_transfer_protocol,
+                       protocol_bit_format,
+                       recv_or_retry_send)
 
 
-def handle_download_request(protocol_bit, clientSocket, serverAddress, filepath, filename):
+def handle_download_request(protocol_bit, clientSocket,
+                            serverAddress, filepath, filename):
     logging.info("Handling downloads")
 
-    if not os.path.exists(filepath): 
+    if not os.path.exists(filepath):
         logging.info("Created destination dir because it did not exist")
         os.mkdir(filepath)
 
-    if not os.path.isdir(filepath):        
+    if not os.path.isdir(filepath):
         logging.error(f"Requested destination dir {filepath} is not a dir")
         return
 
@@ -29,15 +33,18 @@ def handle_download_request(protocol_bit, clientSocket, serverAddress, filepath,
     downloadCmd = (DOWNLOAD + ' ' + filename).encode()
 
     transferMethod.sendMessage(protocol_bit, downloadCmd, serverAddress)
-    logging.debug(f"[HANDSHAKE] Sending {DOWNLOAD} request for file {filename} " + 
-                    f"with {protocol_bit_format(protocol_bit)}")
+    logging.debug(f"[HANDSHAKE] Sending {DOWNLOAD} request for file {filename}"
+                  + f" with {protocol_bit_format(protocol_bit)}")
 
     # Recv ACK
     try:
-        message = transferMethod.recvMessage(TIMEOUT)
+        # message = transferMethod.recvMessage(TIMEOUT)
+        message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress,
+                                     protocol_bit, TIMEOUT)
     except Exception:
         logging.error("Timeout while waiting for filename ACK")
         return
+    logging.info(f"{message.type} was received")
 
     if message.type != ACK:
         if message.type == FIN:
@@ -51,13 +58,13 @@ def handle_download_request(protocol_bit, clientSocket, serverAddress, filepath,
             logging.info(f"{FIN} message sent to {serverAddress}")
         logging.error("File transfer NOT started")
         return
-    
+
     logging.debug(f"[HANDSHAKE] Received {DOWNLOAD} request ACK for file {filename}")
 
     # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.
     file = open(filepath + filename, "wb")
-    logging.debug(f"File to write in is {filepath}/{filename}")
+    logging.debug(f"File to write in is {filepath}{filename}")
 
     transferProtocol = get_transfer_protocol(protocol_bit, transferMethod)
     transferProtocol.recv_file(file, serverAddress)
