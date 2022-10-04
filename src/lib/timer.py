@@ -1,7 +1,7 @@
-from threading import Timer,Event
+from threading import Timer, Event
+
 
 class RepeatingTimer:
-
     def __init__(self, interval, f, *args, **kwargs):
         self.interval = interval
         self.f = f
