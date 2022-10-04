@@ -115,8 +115,12 @@ class StopAndWait:
             self.transferMethod.sendMessage(self.bit, FIN.encode(), address)
             logging.info(f"{FIN} messsage sent to {address}.")
 
-            _ = self.receive(address, lastSentMsg=FIN.encode(),
+            try:
+                _ = self.receive(address, lastSentMsg=FIN.encode(),
                              lastSentBit=self.bit, timeout=timeout)
+            except BaseException:
+                pass
+
             logging.info("File transfer completed")
 
         except Exception as err:
