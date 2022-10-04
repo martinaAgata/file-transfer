@@ -1,17 +1,14 @@
 import threading as thr
-import queue
 
-from lib.GoBackN import GoBackN
 from .definitions import TIMEOUT
 from .utils import handle_action
-from .StopAndWait import StopAndWait
-from .client_handler_transfer_method import ClientHandlerTransferMethod
 
 
 class ClientHandler:
     """
     Client thread interface
     """
+
     def __init__(self, messageQueue, transfer_protocol, address, socket, dirpath):
         """
         Creates a Client Handler and initializes its initial attributes.
@@ -21,8 +18,8 @@ class ClientHandler:
         self.address = address
         self.socket = socket
         self.thread = thr.Thread(
-            target=handle_action,
-            args=(address, transfer_protocol, dirpath))
+            target=handle_action, args=(address, transfer_protocol, dirpath)
+        )
 
     def start_thread(self):
         """

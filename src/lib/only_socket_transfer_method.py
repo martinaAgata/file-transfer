@@ -3,7 +3,6 @@ from .UDPHandler import recv, send
 
 
 class OnlySocketTransferMethod:
-
     def __init__(self, messageSocket):
         self.messageSocket = messageSocket
 
