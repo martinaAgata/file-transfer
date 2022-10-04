@@ -36,34 +36,30 @@ def handle_download_request(protocol_bit, clientSocket,
     logging.debug(f"[HANDSHAKE] Sending {DOWNLOAD} request for file {filename}"
                   + f" with {protocol_bit_format(protocol_bit)}")
 
-    # Recv ACK
-    try:
-        # message = transferMethod.recvMessage(TIMEOUT)
-        message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress,
-                                     protocol_bit, TIMEOUT)
-    except Exception:
-        logging.error("Timeout while waiting for filename ACK")
-        return
-    logging.info(f"{message.type} was received")
+    # # Recv ACK
+    # try:
+    #     # message = transferMethod.recvMessage(TIMEOUT)
+    #     message = recv_or_retry_send(transferMethod, downloadCmd, serverAddress,
+    #                                  protocol_bit, TIMEOUT)
+    # except Exception:
+    #     logging.error("Timeout while waiting for filename ACK")
+    #     return
+    # logging.info(f"{message.type} was received")
 
-    # Send ACK_ACK (ready to read file)
-    transferMethod.sendMessage(protocol_bit, ACK_ACK.encode(), serverAddress)
-    logging.info(f"{ACK_ACK} was sent to {serverAddress}")
+    # if message.type != ACK:
+    #     if message.type == FIN:
+    #         logging.info(f"{FIN} messsage received from {serverAddress}")
+    #         transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
+    #         logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}")
+    #     else:
+    #         logging.error(
+    #             f"Unknown message received: {message.type}, from {serverAddress}")
+    #         transferMethod.sendMessage(1, FIN.encode(), serverAddress)
+    #         logging.info(f"{FIN} message sent to {serverAddress}")
+    #     logging.error("File transfer NOT started")
+    #     return
 
-    if message.type != ACK:
-        if message.type == FIN:
-            logging.info(f"{FIN} messsage received from {serverAddress}")
-            transferMethod.sendMessage(1, FIN_ACK.encode(), serverAddress)
-            logging.debug(f"{FIN_ACK} messsage sent to {serverAddress}")
-        else:
-            logging.error(
-                f"Unknown message received: {message.type}, from {serverAddress}")
-            transferMethod.sendMessage(1, FIN.encode(), serverAddress)
-            logging.info(f"{FIN} message sent to {serverAddress}")
-        logging.error("File transfer NOT started")
-        return
-
-    logging.debug(f"[HANDSHAKE] Received {DOWNLOAD} request ACK for file {filename}")
+    # logging.debug(f"[HANDSHAKE] Received {DOWNLOAD} request ACK for file {filename}")
 
     # Open file for receiving using byte-array option.
     # If file does not exist, then creates a new one.

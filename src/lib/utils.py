@@ -65,23 +65,13 @@ def handle_download_request(clientAddress,
             f"Sending {FIN} File does not exist to client {clientAddress}")
         return
 
-    # Send filename received ACK.
-    transfer_protocol.transferMethod.sendMessage(1,
-                                                 ACK.encode(),
-                                                 clientAddress)
-
-    # Wait for ACK_ACK, o re-send ACK.
-    # To check client is ready to receive data
-    try:
-        message = recv_or_retry_send(transfer_protocol.transferMethod,
-                                     ACK.encode(), clientAddress, 1, TIMEOUT)
-    except Exception:
-        logging.error("Timeout while waiting for filename ACK")
-        return
-    logging.info(f"{ACK_ACK}:{message.data} was received from {clientAddress}")
-
-    logging.debug(
-        f"{ACK} Filename received sent to client {clientAddress}")
+    # # Send filename received ACK.
+    # transfer_protocol.transferMethod.sendMessage(1,
+    #                                              ACK.encode(),
+    #                                              clientAddress)
+    #
+    # logging.debug(
+    #     f"{ACK} Filename received sent to client {clientAddress}")
 
     file = open(dirpath + filename, 'rb')
     logging.debug(f"File to read from is {dirpath}{filename}")

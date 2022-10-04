@@ -85,8 +85,12 @@ class GoBackN:
     def recv_file(self, file, address, lastSentMsg=None, lastRcvBit=None):
         lastSeqNum = 0
 
-        message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
-        logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+        try:
+            message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
+            logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+        except BaseException:
+            logging.info(f"Timeout while waiting for message from {address}")
+            return
 
         while message.type == DATA:
             if message.bit == lastSeqNum + 1:
@@ -95,8 +99,12 @@ class GoBackN:
 
             self.transferMethod.sendMessage(lastSeqNum, ACK.encode(), address)
 
-            message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
-            logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+            try:
+                message = self.transferMethod.recvMessage(timeout=GBN_RECEIVER_TIMEOUT)
+                logging.debug(f"base={self.base} seq_num={message.bit} type={message.type}")
+            except BaseException:
+                logging.info(f"Timeout while waiting for message from {address}")
+                return
 
         if message.type == FIN:
             logging.info(f"{FIN} messsage received from {message.clientAddress}.")
